@@ -45,32 +45,44 @@ class PyMorel():
         e = m.e = self.init_set('e')        # Energy carrier set
         a = m.a = self.init_set('a')        # Areas set
         t = m.t = self.init_set('t')        # Technologies set
-        tg = m.tg = self.init_subset('tg')  # Generation technology subset
+        tt = m.tt = self.init_subset('tt')  # Transformation technology subset
         ts = m.ts = self.init_subset('ts')  # Storage technology subset 
         tx = m.tx = self.init_subset('tx')  # Transmission technology subset
+        w = m.w = self.init_set('w')        # Weeks (time) set
         h = m.h = self.init_set('h')        # Hours (time) set 
 
 #        m.gfShr = self.init_par([l,g,f,y],'gfShr')
 
         # Declare variables: Capital V indicates variable 
-        # GI: Energy input into generation technology g 
-        m.GI = Var(tg, h, within=NonNegativeReals)
-        # GC: Capacity of generation technology by energy input
-        m.GC = Var(tg, within=NonNegativeReals)
+        # GIh: Energy input effect into transformation technology g by hour & week 
+        m.GIh = Var(tgw,w,h, within=NonNegativeReals)
+        # GIw: Energy input effect into transformation technology g by week 
+        m.GIw = Var(tgh,w, within=NonNegativeReals)
+        # GCa: Capacity effect of transformation technology (implicitly annual)
+        m.GCa = Var(tg, within=NonNegativeReals)
 
-        # SS: Storage input by hour (energy carrier is mapped to ts)
-        m.SS = Var(ts,h, within=NonNegativeReals)
-        # SD: Discharge from storage by hour (energy carrier is mapped to ts)
-        m.SD = Var(ts,h, within=NonNegativeReals)
-        # SV: Stored volume of energy by hour 
-        m.SV = Var(ts,h, within=NonNegativeReals)
-        # SC: Capacity of storage technology (SV < SC)
+        # SSh: Storage input effect (energy carrier is mapped to ts) by hour & week
+        m.SSh = Var(tsh,w,h, within=NonNegativeReals)
+        # SS: Storage input effect (energy carrier is mapped to ts) by hour
+        m.SSw = Var(tsw,w, within=NonNegativeReals)
+        # SDh: Discharge from storage effect (energy carrier is mapped to ts) by hour & week
+        m.SDh = Var(tsh,w,h, within=NonNegativeReals)
+        # SDw: Discharge from storage effect (energy carrier is mapped to ts) by week
+        m.SDh = Var(tsw,w, within=NonNegativeReals)
+        # SV: Stored volume of energy by hour and week
+        m.SVh = Var(tsh,w,h, within=NonNegativeReals)
+        # SV: Stored volume of energy by week 
+        m.SVw = Var(tsw,w, within=NonNegativeReals)
+        # SC: Volume Capacity of storage technology (SV < SC)
         m.SC = Var(ts, within=NonNegativeReals)
 
-        # X1 and X2: Transmission (areas and energy carrier mapped to tx)
-        m.X1 = Var(tx,h, within=NonNegativeReals)
-        m.X2 = Var(tx,h, within=NonNegativeReals)
-        # XC: Transmission cap (two ways: X1 < XC and X2 < XC)
+        # X1 and X2: Transmission effect (areas and energy carrier mapped to tx) by hour & week
+        m.X1h = Var(txh,w,h, within=NonNegativeReals)
+        m.X2h = Var(txh,w,h, within=NonNegativeReals)
+        # X1 and X2: Transmission effect (areas and energy carrier mapped to tx) by week
+        m.X1w = Var(txw,w, within=NonNegativeReals)
+        m.X2w = Var(txw,w, within=NonNegativeReals)
+        # XC: Transmission effect limit (two ways: X1 < XC and X2 < XC)
         m.XC = Var(x, within=NonNegativeReals)
         
         # Objective
