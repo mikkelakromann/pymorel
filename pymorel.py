@@ -122,41 +122,42 @@ class PyMorel():
     #
     ###########################################################################
 
-    # Market equilibrium for energy carriers, areas and hours
-    def Q_equilibrium(self,m,e,a,h):
-        """Constraint to ensure energy equilibrium."""
+    # Market equilibrium for energy carriers, areas, weeks and hours
+    def Q_eq_h(self,m,e,a,w,h):
+        """Constraint to ensure effect equilibrium by hour & week."""
+        # Only some energy carriers are traded on hourly basis, skip if not
+        if not m.e_is_hourly[e]:
+            return Constraint.Skip
         # Generation y only if energy carrier is generated inside area
         if m.map_GI_in_ea[e,a]:
             # Supply is mapped from energy-carrier/generation to area
-            gen = sum(m.GI[tg,h]*m.eff_GI[e,tg] for tg in m.map_tg_in_ea[e,a] )
+            gen = sum(m.GIh[tgh,h]*m.eff_GI[e,tg] for tgh in m.map_tgh_in_ea[e,a] )
         else:
             gen = 0
         # Import if energy carrier has transmission into area
         if m.map_Xx_into_ea[e,a]:            
             # Import is mapped through directional transmission line
-            imp = sum(m.X1[tx,h]*m.effX[tx] for tx in m.map_x1_into_ea[e,a]) \
-                 +sum(m.X2[tx,h]*m.effX[tx] for tx in m.map_x2_into_ea[e,a]) 
+            imp = sum(m.X1[txh,h]*m.effX[txh] for txh in m.map_x1h_into_ea[e,a]) \
+                 +sum(m.X2[txh,h]*m.effX[txh] for txh in m.map_x2h_into_ea[e,a]) 
         else:
             imp = 0
         # Export if energy carrier has transmission from area
         if m.map_Xx_from_ea[e,a]:            
             # Export is mapped through directional transmission line
-            exp = sum(m.X1[tx,h] for tx in m.map_x1_from_ea[e,a]) \
-                 +sum(m.X2[tx,h] for tx in m.map_x2_from_ea[e,a]) 
+            exp = sum(m.X1[txh,h] for txh in m.map_x1h_from_ea[e,a]) \
+                 +sum(m.X2[txh,h] for txh in m.map_x2h_from_ea[e,a]) 
         else:
             exp = 0
         # Storage only if energy carrier has storage in area 
         if m.map_SS_in_ea[e,a]:
-            sto = sum(m.SS[ts,h] for ts in m.map_ts_in_ea[e,a])
+            sto = sum(m.SS[tsh,h] for tsh in m.map_tsh_in_ea[e,a])
         else:
             sto = 0
         # Discharge only if energy carrier has storage in area 
         if m.map_SS_in_ea[e,a]:
-            dis = sum(m.SD[ts,h] for ts in m.map_ts_in_ea[e,a])
+            dis = sum(m.SD[tsh,h] for tsh in m.map_tsh_in_ea[e,a])
         else:
             dis = 0
-
-
         # Only make constraint if [e,a] combination has supply or demand
         if gen or imp or dis or exp or sto or dem:
             return gen + imp + dis == dem + exp + sto 
