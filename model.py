@@ -27,32 +27,43 @@ class PyMorelModel():
         sets = self.data.sets   # Pointer for set data structure (dict of lists)
         
         # Declare and assign sets (double assignment a=b=f(x) for easy reading)
-        # Single letter lower case indicate index
-        e = m.e = Set(initialize=sets['e'])     # Energy carrier set
-        a = m.a = Set(initialize=sets['a'])     # Areas set
-        t = m.t = Set(initialize=sets['t'])     # Technologies set
-        w = m.w = Set(initialize=sets['w'])     # Weeks (time) set
-        h = m.h = Set(initialize=sets['h'])     # Hours (time) set 
+        # Single letter lower case indicate index, single letter upper case indicate set
+        E = m.E = Set(initialize=sets['E'])     # Energy carrier set
+        A = m.A = Set(initialize=sets['A'])     # Areas set
+        T = m.T = Set(initialize=sets['T'])     # Technologies set
+        W = m.W = Set(initialize=sets['W'])     # Weeks (time) set
+        H = m.H = Set(initialize=sets['H'])     # Hours (time) set 
 
-        # Subsets of technologies superset
-        tc = m.tc = Set(initialize=sets['tc'],within=t)     # Endogenous investment technologies
-        tth = m.tth = Set(initialize=sets['tth'],within=t)  # Transformation hourly technologies
+
+        EH = m.EH = Set(initialise=sets['EH']
+        EW = m.EW = 
+        EA = m.EA = 
+
+        # tech/time subsets of technologies superset
+        TC = m.TC = Set(initialize=sets['TC'],within=t)     # Endogenous investment technologies
+        TTH = m.TTH = Set(initialize=sets['TTH'],within=T)  # Transformation hourly technologies
+        TSH = m.TSH = Set(initialize=sets['TSH'],within=T)  # Storage hourly technologies
+        TXH = m.TXH = Set(initialize=sets['TXH'],within=T)  # Transmission hourly technologies
+        TTW = m.TTW = Set(initialize=sets['TTW'],within=T)  # Transformation weekly technologies
+        TSW = m.TSW = Set(initialize=sets['TSW'],within=T)  # Storage weekly technologies
+        TXW = m.TXW = Set(initialize=sets['TXW'],within=T)  # Transmission weekly technologies
+        TTA = m.TTA = Set(initialize=sets['TTA'],within=T)  # Transformation annual technologies
+        TSA = m.TSA = Set(initialize=sets['TSA'],within=T)  # Storage annual technologies
+        TXA = m.TXA = Set(initialize=sets['TXA'],within=T)  # Transmission annual technologies
         
-        tsh = m.tsh = Set(initialize=sets['tsh'],within=t)  # Storage hourly technologies
-        txh = m.txh = Set(initialize=sets['txh'],within=t)  # Transmission hourly technologies
-        
-        # Subset dicts for quicker for .. in interations in constraint rules
-        self.set_conditionalset_dict(self.data.conditionalsets)
-        
-        cs = self.conditionalsubset('tth_in_ea',('ele','dk0'))
-        print("Printing type ...")
-        print(cs.type())
-        print("PPrinting Pyomo Set ...")
-        print(cs.pprint())
-        print(len(cs))
-        print("Done printing ...")
-        print("")
-        
+        # tech/time subsets conditional on ener/area - store cond. subsets in a dict
+        css = self.data.util.ss
+        m.conditionalsubset = {}
+        m.conditionalsubset['TTH_ea'] = Set(initialize=ss['TTH_ea'],within=TTH)  # Transformation hourly technologies
+        m.conditionalsubset['TSH_ea'] = Set(initialize=ss['TSH_ea'],within=TSH)  # Storage hourly technologies
+        m.conditionalsubset['TXH_ea'] = Set(initialize=ss['TXH_ea'],within=TXH)  # Transmission hourly technologies
+        m.conditionalsubset['TTH_ea'] = Set(initialize=ss['YYW_ea'],within=TTW)  # Transformation weekly technologies
+        m.conditionalsubset['TSH_ea'] = Set(initialize=ss['TSW_ea'],within=TSW)  # Storage weekly technologies
+        m.conditionalsubset['TXH_ea'] = Set(initialize=ss['TXW_ea'],within=TXW)  # Transmission weekly technologies
+        m.conditionalsubset['TTH_ea'] = Set(initialize=ss['TTA_ea'],within=TTA)  # Transformation annual technologies
+        m.conditionalsubset['TSH_ea'] = Set(initialize=ss['TSA_ea'],within=TSA)  # Storage annual technologies
+        m.conditionalsubset['TXH_ea'] = Set(initialize=ss['TXA_ea'],within=TXA)  # Transmission annual technologies
+
 
         ###############################################################################################################
         # Parameter declaration and assignment
@@ -80,15 +91,15 @@ class PyMorelModel():
         ###############################################################################################################
 
         # Technology capacity additions are annual
-        m.C = Var(tc, within=NonNegativeReals)          # Capacity addition for all endognenous investment technologies
+        m.C = Var(TC, within=NonNegativeReals)          # Capacity addition for all endognenous investment technologies
 
         # Hourly transformation, storage and transmission technologies
-        m.TIh = Var(tth,w,h, within=NonNegativeReals)   # Energy input effect into transformation 
-        m.SSh = Var(tsh,w,h, within=NonNegativeReals)   # Storage input effect into storage  
-        m.SDh = Var(tsh,w,h, within=NonNegativeReals)   # Discharge output effect from storage 
-        m.SVh = Var(tsh,w,h, within=NonNegativeReals)   # Stored volume of energy 
-        m.X1h = Var(txh,w,h, within=NonNegativeReals)   # Transmission effect from 1st to 2nd area
-        m.X2h = Var(txh,w,h, within=NonNegativeReals)   # Transmission effect from 2nd to 1st area
+        m.Th = Var(TTH,W,H, within=NonNegativeReals)   # Energy input effect into transformation 
+        m.Xh = Var(TXH,W,H, within=NonNegativeReals)   # Transmission effect from 1st to 2nd area
+        m.Ih = Var(TDH,W,H, within=NonNegativeReals)   # Transmission effect from 2nd to 1st area
+        m.Sh = Var(TSH,W,H, within=NonNegativeReals)   # Storage input effect into storage  
+        m.Dh = Var(TSH,W,H, within=NonNegativeReals)   # Discharge output effect from storage 
+        m.Vh = Var(TSH,W,H, within=NonNegativeReals)   # Stored volume of energy 
 
         # Weekly transformation, storage and transmission technologies
         #m.TIw = Var(ttw,w, within=NonNegativeReals)    # Energy input effect into transformation  
@@ -105,7 +116,7 @@ class PyMorelModel():
         # Objective
         m.obj = Objective(rule=self.rule_objective)
         # Constraints: Capital Q indicates constraint, R indicates rule
-        m.Q_equilibrium_wh = Constraint(m.e, m.a, m.w, m.h, rule=self.rule_equilibrium_wh)
+        m.Q_equilibrium_h = Constraint(m.EH, m.A, m.W, m.H, rule=self.rule_equilibrium_h)
         
     ###################################################################################################################
     #
@@ -122,7 +133,8 @@ class PyMorelModel():
         # Variable operating costs is ...
         cst_vopex = 0
         # Fuel costs are tied to input to generation, only exogenous fuel costs
-        cst_fuels = sum(m.TIh[tth,w,h]*m.cst_TIh[tth,w,h] for tth in m.tth for w in m.w for h in m.h)
+        cst_fuels = sum(m.Th[tth,w,h]*m.cst_Th[tth,w,h] for tth in m.tth for w in m.w for h in m.h)
+        cst_store = sum(m.Sh[tsh,w,h]*m.cst_Sh[tsh,w,h] for tsh in m.tsh for w in m.w for h in m.h)
         # Total costs is sum of CAPEX, Fixed OPEX, variable OPEX and fuel costs
         cst_total = cst_capex + cst_fopex + cst_vopex + cst_fuels
         return cst_total
@@ -134,51 +146,33 @@ class PyMorelModel():
     ###################################################################################################################
 
     # Market equilibrium for energy carriers, areas, weeks and hours
-    def rule_equilibrium_wh(self,m,e,a,w,h) -> dict:
+    def rule_equilibrium_h(self,m,e,a,w,h) -> dict:
         """Constraint to ensure effect equilibrium by hour & week."""
-        # Only some energy carriers are traded on hourly basis, skip if not
-        if not self.selector('e_is_hourly',(e)):
-            return Constraint.Skip
-        # Transformation only if energy carrier is generated inside area
-        if self.selector('TIh_in_ea',(e,a)):
-            # Supply is mapped from energy carrier/generation to area
-#            tra = sum(m.TIh[tth,w,h]*m.eff_TO[e,tth] for tth in self.conditionalsubset('tth_in_ea',(e,a)))
-            tra = sum(m.TIh[tth,w,h]*m.eff_TO[e,tth] for tth in self.tth if tth in self.conditionalsets['tth_in_ea'][e,a]
-        else:
-            tra = 0
-        # Import if energy carrier has transmission into area
-        if self.selector('XXh_into_ea',(e,a)):            
-            # Import is mapped through directional transmission line
-            imp = sum(m.X1[txh,w,h]*m.eff_X[txh] for txh in self.conditionalsubset('x1_into_ea',(e,a))) \
-                 +sum(m.X2[txh,w,h]*m.eff_X[txh] for txh in self.conditionalsubset('x2_into_ea',(e,a))) 
-        else:
-            imp = 0
-        # Export if energy carrier has transmission from area
-        if self.selector('XXh_from_ea',(e,a)):            
-            # Export is mapped through directional transmission line
-            exp = sum(m.X1[txh,w,h] for txh in self.conditionalsubset('x1_from_ea',(e,a))) \
-                 +sum(m.X2[txh,w,h] for txh in self.conditionalsubset('x2_from_ea',(e,a))) 
-        else:
-            exp = 0
-        # Storage only if energy carrier has storage in area 
-        if self.selector('SS_in_ea',(e,a)):
-            sto = sum(m.SS[tsh,w,h] for tsh in self.conditionalsubset('tsh_in_ea'(e,a)))
-        else:
-            sto = 0
-        # Discharge only if energy carrier has storage in area 
-        if self.selector('SS_in_ea',(e,a)):
-            dis = sum(m.SD[tsh,w,h] for tsh in self.conditionalsubset('tsh_in_ea'(e,a)))
-        else:
-            dis = 0
+
+        # Transformation between energy carriers: eff_T>0 is output, eff_T<0 is input
+        tra = sum(m.Th[tth,w,h]*m.eff[e,tth] for tth in m.conditionalsubset['tth_ea'][e,a])
+
+        # Gross import from area a - transmission technologies are directional
+        # I is import into the owner area 
+        # X is export from another owner area turned into import to this destination area
+        imp = sum(m.Ih[txh,w,h]*m.eff[e,txh] for txh in m.conditionalsubset['txh_ea'][e,a])\
+             +sum(m.Xh[tih,w,h]*m.eff[e,tih] for tih in m.conditionalsubset['tdh_ea'][e,a])
+                  
+        # Gross export from area a - transmission technologies are directional
+        # so export for the owner is import to the receiver
+        exp = sum(m.Xh[txh,w,h] for txh in m.conditionalsubset['txh_ea'][e,a])\
+             +sum(m.Ih[tih,w,h] for tih in m.conditionalsubset['tdh_ea'][e,a]
+ 
+        # Storage and discharge
+        sto = sum(m.Sh[tsh,w,h] for tsh in m.conditionalsubset['tsh_ea'][e,a])
+        dis = sum(m.Dh[tsh,w,h] for tsh in m.conditionalsubset['tsh_ea'][e,a])
+
         # Demand
-        if self.selector('DE_in_ea', (e,a)):
-            dem = m.lvl_DEh[e,a,w,h]
-        else:
-            dem = 0
-#       inp = sum(m.TIh[tth,w,h]*m.shr_TI[e,tth] for tth in m.tth if self.conditionalsubset('tth_in_ea',tth,(e,a)))
-        # Only make constraint if [e,a] combination has supply or demand
-        if tra or imp or dis or exp or sto or dem:
-            return tra + imp + dis == dem + exp + sto 
+        dem = m.lvl_D[e,a,w,h]
+
+        # Return equilibrium constraint rule if any
+        if tra or exp or imp or sto or dis or dem:
+            return tra + dis + imp == dem + sto + exp
         else:
             return Constraint.Skip
     
@@ -195,17 +189,33 @@ class PyMorelModel():
     #
     ###################################################################################################################
 
-    def generation_capacity_limit_hourly(self,m,tth,w,h):
-        """Constraint for limiting input to hourly generation technologies."""
-        return m.TIh[tth,w,h] < m.max_TIh[tth,w,h] + m.C[tth]
+    def rule_transformation_capacity_limit_hourly(self,m,tth,w,h):
+        """Constraint for limiting input to hourly transformation technologies."""
+        return m.Th[tth,w,h] < m.max_T[tth] + m.C[tth]
 
-    def transmission1_capacity_limit_hourly(self,m,txh,w,h):
-        """Constraint for limiting input to hourly transmission technologies."""
-        return m.X1h[txh,w,h] < m.Xxh_max[txh,w,h] + m.C[txh]
+    def rule_export_capacity_limit_hourly(self,m,txh,w,h):
+        """Constraint for limiting input to hourly transmission technologies (export)."""
+        return m.Xh[txh,w,h] < m.max_X[txh] + m.C[txh]
 
-    def transmission2_capacity_limit_hourly(self,m,txh,w,h):
-        """Constraint for limiting input to hourly transmission technologies."""
-        return m.X2h[txh,w,h] < m.Xxh_max[txh,w,h] + m.C[txh]
+    def rule_import_capacity_limit_hourly(self,m,tdh,w,h):
+        """Constraint for limiting input to hourly transmission technologies (import)."""
+        return m.Ih[tdh,w,h] < m.max_X[tdh] + m.C[tdh]
+
+    def rule_storage_capacity_limit_hourly(self,m,tsh,w,h):
+        """Constraint for limiting input to hourly transmission technologies (import)."""
+        return m.Sh[tsh,w,h] < m.max_S[tsh] + m.C[tsh] if tsh in m.TC
+
+    def rule_discharge_capacity_limit_hourly(self,m,tsh,w,h):
+        """Constraint for limiting input to hourly transmission technologies (import)."""
+        return m.Dh[tsh,w,h] < m.max_D[tsh] + m.C[tsh] if tsh in m.TC
+
+    def rule_storage_volume_maxlimit_hourly(self,m,tsh,w,h):
+        """Constraint for limiting input to hourly transmission technologies (import)."""
+        return m.Vh[tsh,w,h] < m.max_V[tsh] + m.C[tsh] if tsh in m.TC
+
+    def rule_storage_volume_minlimit_hourly(self,m,tsh,w,h):
+        """Constraint for limiting input to hourly transmission technologies (import)."""
+        return m.Vh[tsh,w,h] > m.min_V[tsh] + m.C[tsh] if tsh in m.TC
 
     ###################################################################################################################
     #
@@ -221,32 +231,4 @@ class PyMorelModel():
     def print_debug(self):
         """Print debug information."""
         print(self.results)
-
-    def selector(self, selector_name: str, indices: set) -> bool:
-        """Selector for inclusion or exclusion of expression by set indexer."""
-        try:
-            return self.data.selector_dict[selector_name][indices]
-        except: 
-            print("No selector " + selector_name + " for index " + str(indices))
-            return False
-    
-    def conditionalsubset(self, csubset_name: str, key, indices: set) -> object:
-        """Returns Pyomo subset conditional to index."""
-        cset_dict = getattr(self,'csubset_' + csubset_name)
-        return key in cset_dict[indices]
-#        return getattr(self,'csubset_' + csubset_name + "_" + str(indices), Set())
-       
-    def set_conditionalset_dict(self, cs_data):
-        """Setup dict for conditionalsubsets()"""
-        # cs_data is a dict of dicts
-        for cs_name in cs_data.keys():
-            cs_dict = cs_data[cs_name]
-            print(cs_name + str(cs_dict))
-            for indice in cs_dict.keys():
-                subset_name = "csubset_" + cs_name + "_" + str(indice)
-                print(subset_name + str(cs_dict[indice]))
-                if cs_dict[indice] == []:
-                    setattr(self.model,subset_name,Set())
-                else:
-                    setattr(self.model,subset_name,Set(initialize=cs_dict[indice]))
 
