@@ -27,17 +27,18 @@ class PyMorelModel():
         sets = self.data.sets   # Pointer for set data structure (dict of lists)
         
         # Declare and assign sets (double assignment a=b=f(x) for easy reading)
-        # Single letter lower case indicate index, single letter upper case indicate set
+        # Single letter lower case indicate set element, 
+        # Single letter upper case indicate set
         E = m.E = Set(initialize=sets['E'])     # Energy carrier set
         A = m.A = Set(initialize=sets['A'])     # Areas set
         T = m.T = Set(initialize=sets['T'])     # Technologies set
         W = m.W = Set(initialize=sets['W'])     # Weeks (time) set
         H = m.H = Set(initialize=sets['H'])     # Hours (time) set 
 
-
-        EH = m.EH = Set(initialise=sets['EH']
-        EW = m.EW = 
-        EA = m.EA = 
+        # Subsets of energy carriers by trading frequency
+        EH = m.EH = Set(initialise=sets['EH'],within=E)     # Energy carriers traded hourly
+        EW = m.EW = Set(initialise=sets['EW'],within=E)     # Energy carriers traded weekly
+        EA = m.EA = Set(initialise=sets['EA'],within=E)     # Energy carriers traded yearly
 
         # tech/time subsets of technologies superset
         TC = m.TC = Set(initialize=sets['TC'],within=t)     # Endogenous investment technologies
@@ -71,20 +72,6 @@ class PyMorelModel():
 
         para = self.data.para   # Pointer for parameter data structure (dict of dicts)
         
-        # m.cst_TIh = Param(t,w,h,initialize=para['cst_TIh'])       # Unit cost of energy input and variable cost 
-        # m.max_TIh = Param(t,w,h,initialize=para['max_TIh'])       # Maximum energy input into transformation  
-        # m.eff_TIe = Param(e,t,initialize=para['eff_TIe'])         # Transformation efficiency: energy carrier/input
-        # m.eff_X = Param(t,initialize=para['eff_X'])               # Efficiency of transmission connection
-        # m.max_X1h = Param(t,w,h, initialize=para['max_X1h'])      # Maximum capacity of transmission 1st way    
-        # m.max_X2h = Param(t,w,h, initialize=para['max_X2h'])      # Maximum capacity of transmission 2nd way   
-        # m.lvl_DEh = Param(e,a,w,h, initialize=para['lvl_DEh'])    # Demand of energy carrier in area by week and hour
-        m.cst_TIh = para['cst_TIh']     # Unit cost of energy input and variable cost 
-        m.max_TIh = para['max_TIh']     # Maximum energy input into transformation  
-        m.eff_TIe = para['eff_TIe']     # Transformation efficiency: energy carrier/input
-        m.eff_X = para['eff_X']         # Efficiency of transmission connection
-        m.max_X1h = para['max_X1h']     # Maximum capacity of transmission 1st way    
-        m.max_X2h = para['max_X2h']     # Maximum capacity of transmission 2nd way   
-        m.lvl_DEh = para['lvl_DEh']     # Demand of energy carrier in area by week and hour
 
         ###############################################################################################################
         # Variable declaration and assignment
@@ -94,12 +81,12 @@ class PyMorelModel():
         m.C = Var(TC, within=NonNegativeReals)          # Capacity addition for all endognenous investment technologies
 
         # Hourly transformation, storage and transmission technologies
-        m.Th = Var(TTH,W,H, within=NonNegativeReals)   # Energy input effect into transformation 
-        m.Xh = Var(TXH,W,H, within=NonNegativeReals)   # Transmission effect from 1st to 2nd area
-        m.Ih = Var(TDH,W,H, within=NonNegativeReals)   # Transmission effect from 2nd to 1st area
-        m.Sh = Var(TSH,W,H, within=NonNegativeReals)   # Storage input effect into storage  
-        m.Dh = Var(TSH,W,H, within=NonNegativeReals)   # Discharge output effect from storage 
-        m.Vh = Var(TSH,W,H, within=NonNegativeReals)   # Stored volume of energy 
+        m.Th = Var(TTH,W,H, within=NonNegativeReals)    # Energy input effect into transformation 
+        m.Xh = Var(TXH,W,H, within=NonNegativeReals)    # Transmission effect from 1st to 2nd area
+        m.Ih = Var(TDH,W,H, within=NonNegativeReals)    # Transmission effect from 2nd to 1st area
+        m.Sh = Var(TSH,W,H, within=NonNegativeReals)    # Storage input effect into storage  
+        m.Dh = Var(TSH,W,H, within=NonNegativeReals)    # Discharge output effect from storage 
+        m.Vh = Var(TSH,W,H, within=NonNegativeReals)    # Stored volume of energy 
 
         # Weekly transformation, storage and transmission technologies
         #m.TIw = Var(ttw,w, within=NonNegativeReals)    # Energy input effect into transformation  
@@ -127,14 +114,14 @@ class PyMorelModel():
     def rule_objective(self,m):
         """Total cost is discouted capex, fopex and vopex."""
         # Capital costs (CAPEX) is tied to ...
-        cst_capex = 0
+        cst_capex = sum(m.C[t]*cst_C[t] for t in m.T)
         # Fixed operations costs (FOPEX) is tied ...
         cst_fopex = 0
         # Variable operating costs is ...
         cst_vopex = 0
         # Fuel costs are tied to input to generation, only exogenous fuel costs
-        cst_fuels = sum(m.Th[tth,w,h]*m.cst_Th[tth,w,h] for tth in m.tth for w in m.w for h in m.h)
-        cst_store = sum(m.Sh[tsh,w,h]*m.cst_Sh[tsh,w,h] for tsh in m.tsh for w in m.w for h in m.h)
+        cst_fuels = sum(m.Th[tth,w,h]*m.cst_Th[tth,w,h] for tth in m.TTH for w in m.W for h in m.H)
+        cst_store = sum(m.Sh[tsh,w,h]*m.cst_Sh[tsh,w,h] for tsh in m.TSH for w in m.W for h in m.H)
         # Total costs is sum of CAPEX, Fixed OPEX, variable OPEX and fuel costs
         cst_total = cst_capex + cst_fopex + cst_vopex + cst_fuels
         return cst_total
@@ -142,33 +129,36 @@ class PyMorelModel():
     ###################################################################################################################
     #
     #   MARKET EQUILIBRIUM FOR AREAS RULE DEFINITION
+    #   Market equilibrium for energy carriers, areas, weeks and hours
+    #   ie  one equation per energy carrier, area and time step
     #
     ###################################################################################################################
 
-    # Market equilibrium for energy carriers, areas, weeks and hours
+    # Trading and exchange is on an energy carrier basis
     def rule_equilibrium_h(self,m,e,a,w,h) -> dict:
-        """Constraint to ensure effect equilibrium by hour & week."""
+        """Constraint to ensure equilibrium for hourly traded energy carriers."""
 
-        # Transformation between energy carriers: eff_T>0 is output, eff_T<0 is input
-        tra = sum(m.Th[tth,w,h]*m.eff[e,tth] for tth in m.conditionalsubset['tth_ea'][e,a])
+        # Transformation between energy carriers: eff>0 is output, eff<0 is input
+        # For heat pumps, eff needs to be modified to depend on time
+        tra = sum(m.Th[tth,w,h]*m.eff[e,tth] for tth in m.conditionalsubset['TTH_ea'][e,a])
 
         # Gross import from area a - transmission technologies are directional
         # I is import into the owner area 
         # X is export from another owner area turned into import to this destination area
-        imp = sum(m.Ih[txh,w,h]*m.eff[e,txh] for txh in m.conditionalsubset['txh_ea'][e,a])\
-             +sum(m.Xh[tih,w,h]*m.eff[e,tih] for tih in m.conditionalsubset['tdh_ea'][e,a])
+        imp = sum(m.Ih[txh,w,h]*m.eff[e,txh] for txh in m.conditionalsubset['TXH_ea'][e,a])\
+             +sum(m.Xh[tih,w,h]*m.eff[e,tih] for tih in m.conditionalsubset['TIH_ea'][e,a])
                   
         # Gross export from area a - transmission technologies are directional
         # so export for the owner is import to the receiver
-        exp = sum(m.Xh[txh,w,h] for txh in m.conditionalsubset['txh_ea'][e,a])\
-             +sum(m.Ih[tih,w,h] for tih in m.conditionalsubset['tdh_ea'][e,a]
+        exp = sum(m.Xh[txh,w,h] for txh in m.conditionalsubset['TXH_ea'][e,a])\
+             +sum(m.Ih[tih,w,h] for tih in m.conditionalsubset['TIH_ea'][e,a]
  
         # Storage and discharge
-        sto = sum(m.Sh[tsh,w,h] for tsh in m.conditionalsubset['tsh_ea'][e,a])
-        dis = sum(m.Dh[tsh,w,h] for tsh in m.conditionalsubset['tsh_ea'][e,a])
+        sto = sum(m.Sh[tsh,w,h] for tsh in m.conditionalsubset['TSH_ea'][e,a])
+        dis = sum(m.Dh[tsh,w,h] for tsh in m.conditionalsubset['TSH_ea'][e,a])
 
         # Demand
-        dem = m.lvl_D[e,a,w,h]
+        dem = m.lvl_DH[e,a,w,h]
 
         # Return equilibrium constraint rule if any
         if tra or exp or imp or sto or dis or dem:
@@ -179,6 +169,8 @@ class PyMorelModel():
     ###################################################################################################################
     #
     #   STORAGE RELATIONS: INTERTEMPORAL AND OTHERS RULE DEFINITIONS
+    #   Storage is on a technology basis, i.e. one equation per technology and time step
+    #   Note: each technology is always connected to exactly one area 
     #
     ###################################################################################################################
 
@@ -191,31 +183,35 @@ class PyMorelModel():
 
     def rule_transformation_capacity_limit_hourly(self,m,tth,w,h):
         """Constraint for limiting input to hourly transformation technologies."""
-        return m.Th[tth,w,h] < m.max_T[tth] + m.C[tth]
+        return m.Th[tth,w,h] < (m.ini_T[tth] + m.C[tth]) * m.avail_Th[tth,w,h]
 
     def rule_export_capacity_limit_hourly(self,m,txh,w,h):
         """Constraint for limiting input to hourly transmission technologies (export)."""
-        return m.Xh[txh,w,h] < m.max_X[txh] + m.C[txh]
+        return m.Xh[txh,w,h] < (m.ini_X[txh] + m.C[txh]) * m.avail_Xh[txh,w,h]
 
     def rule_import_capacity_limit_hourly(self,m,tdh,w,h):
         """Constraint for limiting input to hourly transmission technologies (import)."""
-        return m.Ih[tdh,w,h] < m.max_X[tdh] + m.C[tdh]
+        return m.Ih[tdh,w,h] < (m.ini_I[tdh] + m.C[tdh]) * m.avail_Ih[tdh,w,h]
 
     def rule_storage_capacity_limit_hourly(self,m,tsh,w,h):
-        """Constraint for limiting input to hourly transmission technologies (import)."""
-        return m.Sh[tsh,w,h] < m.max_S[tsh] + m.C[tsh] if tsh in m.TC
+        """Constraint for limiting input to hourly storage sion technologies."""
+        return m.Sh[tsh,w,h] < (m.ini_S[tsh] + m.C[tsh]) * m.avail_Sh[tsh,w,h] 
 
     def rule_discharge_capacity_limit_hourly(self,m,tsh,w,h):
-        """Constraint for limiting input to hourly transmission technologies (import)."""
-        return m.Dh[tsh,w,h] < m.max_D[tsh] + m.C[tsh] if tsh in m.TC
+        """Constraint for limiting output from hourly storage technologies."""
+        return m.Dh[tsh,w,h] < (m.ini_D[tsh] + m.C[tsh]) * m.avail_Dh[tsh,w,h] 
 
     def rule_storage_volume_maxlimit_hourly(self,m,tsh,w,h):
-        """Constraint for limiting input to hourly transmission technologies (import)."""
-        return m.Vh[tsh,w,h] < m.max_V[tsh] + m.C[tsh] if tsh in m.TC
+        """Constraint for limiting upper volume of hourly storage technologies."""
+        return m.Vh[tsh,w,h] < (m.ini_V[tsh] + m.C[tsh]) * m.avail_Vh[tsh,w,h]
 
     def rule_storage_volume_minlimit_hourly(self,m,tsh,w,h):
-        """Constraint for limiting input to hourly transmission technologies (import)."""
-        return m.Vh[tsh,w,h] > m.min_V[tsh] + m.C[tsh] if tsh in m.TC
+        """Constraint for limiting input to hourly storage technologies."""
+        return m.Vh[tsh,w,h] > (m.ini_V[tsh] + m.C[tsh]) * m.avail_Vh[tsh,w,h]
+
+    def rule_new_capacity(self,m,t):
+        """Limit new capacity below exogenous choice."""
+        return m.C[t] < max_C[t]
 
     ###################################################################################################################
     #
