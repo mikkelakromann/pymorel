@@ -4,91 +4,109 @@ class PyMorelData():
     
     def __init__(self):
         """Perform these functions when initiating a PyMorelData object."""
-        self.set_data()
-        self.set_util()
         self.set_sets()
         self.set_para_hourly()
         self.set_para_yearly()
         
-    def set_data(self):
-        """Loads input data into internal dataframes."""
-        # Get data and put it into dataframes
+    def set_sets(self):
+        """Loads input data into internal dataframes, clean and set the main sets."""
+        # Get data and put it into dataframes 
         data = self.get_default_data()
-        self.a_data = pandas.DataFrame(data['a_data'])      # Area data
-        self.e_data = pandas.DataFrame(data['e_data'])      # Energy carrier data
-        self.t_data = pandas.DataFrame(data['t_data'])      # Technology data
-        self.te_data = pandas.DataFrame(data['te_data'])    # Technonology x energy carrier data
-        self.h_data = pandas.DataFrame(data['h_data'])      # Hourly data
-        self.w_data = pandas.DataFrame(data['w_data'])      # Weekly data
-        self.wh_data = pandas.DataFrame(data['wh_data'])    # Weekly/hourly data
+        t  = self.t_data = pandas.DataFrame(data['t_data'])     # Technology data 
+        te = self.te_data = pandas.DataFrame(data['te_data'])   # Technonology x energy carrier data
+        ty = self.ty_data = pandas.DataFrame(data['ty_data'])   # Technology x year data
 
-    def set_util(self):
-        """Compute utility dict of subsets."""
-        # Add tech/area and ener/time data to a copy of the tech/ener data
-        te_full = pandas.merge(self.t_data, self.te_data, on='tech')
-        # Add ener/time from e_data
-        te_full = pandas.merge(te_full, self.e_data, on='ener')
-        self.te_full = te_full
+        h = self.h_data = pandas.DataFrame(data['h_data'])      # Hourly data
+        w = self.w_data = pandas.DataFrame(data['w_data'])      # Weekly data
+        wh = self.wh_data = pandas.DataFrame(data['wh_data'])   # Weekly x hourly data
+
+        a = self.a_data = pandas.DataFrame(data['a_data'])      # Area data
+        e = self.e_data = pandas.DataFrame(data['e_data'])      # Energy carrier data
+        ea = self.ea_data = pandas.DataFrame(data['ea_data'])   # Energy carrier x area data
+
+        # Clean out technologies that are not relevant to the year or have zero endo & exo capacity limit
+        ty = ty[ (ty.year=='y2020') & ((ty.iniC > 0) | (ty.maxC >0)) ]
+        t = pandas.merge(t,ty['tech'], on='tech')   # merge will drop t rows that have no tech in ty
+        te = pandas.merge(te,ty['tech'], on='tech')  # merge will drop te rows that have no tech in ty
+        # TODO: Clean t for areas not in a 
+        # TODO: Clean te for eners not in e 
+
+        # Save the main sets in a dict of lists
+        self.sets = {
+            'E':  e['ener'].to_list(),                          # Energy carriers 
+            'A':  a['area'].to_list(),                          # Areas
+            'T':  t['tech'].to_list(),                          # All active technologies
+            'W':  w['week'].to_list(),                          # Weeks
+            'H':  h['hour'].to_list(),                          # Hours
+        }
+        
+        # Merge tech type and time onto te in order to compute subsets of technologies
+        tee = pandas.merge(te,e[['ener','time']], on='ener')
+        tee = pandas.merge(tee,t, on='tech')
+        
+        # Save the main simple subsets in a dict of lists { 'TC': }
+        self.subsets = {
+            'TC':  ty['tech'][ty.maxC>0].to_list(),              # Technologies that can be invested in
+            'TT':  t['tech'][t.type=='tfrm'].to_list(),          # Technologies for transformation
+            'TX':  t['tech'][t.type=='trms'].to_list(),          # Technologies for transmission
+            'TS':  t['tech'][t.type=='stor'].to_list(),          # Technologies for storage
+            'EH':  e['ener'][e.time=='hourly'].to_list(),        # Energy carriers traded hourly
+            'EW':  e['ener'][e.time=='weekly'].to_list(),        # Energy carriers traded weekly
+            'EY':  e['ener'][e.time=='yearly'].to_list(),        # Energy carriers traded yearly
+            # Transformation technologies by time
+            'TTH': tee['tech'][(tee.type=='tfrm') & (tee.time=='hourly')].to_list(),
+            'TTW': tee['tech'][(tee.type=='tfrm') & (tee.time=='weekly')].to_list(),
+            'TTY': tee['tech'][(tee.type=='tfrm') & (tee.time=='yearly')].to_list(),
+            # Transmission technologies by time
+            'TXH': tee['tech'][(tee.type=='trms') & (tee.time=='hourly')].to_list(),
+            'TXW': tee['tech'][(tee.type=='trms') & (tee.time=='weekly')].to_list(),
+            'TXY': tee['tech'][(tee.type=='trms') & (tee.time=='yearly')].to_list(),
+            # Storage technologies by time
+            'TSH': tee['tech'][(tee.type=='stor') & (tee.time=='hourly')].to_list(),
+            'TSW': tee['tech'][(tee.type=='stor') & (tee.time=='weekly')].to_list(),
+            'TSY': tee['tech'][(tee.type=='stor') & (tee.time=='yearly')].to_list(),
+        }
+
+        # Conditional subsets (css) is a (role,freq)-dict of (ener,area)-dicts of tech-lists e.g.
+        # css = { ('tfrm','hourly'): {('elec','dk0'): ['dk_wind','dk_ccgt'], ('heat','dk0'): [dk_ccgt], ...}, ... }
+        teea = pandas.merge(tee, a, on='area')
+        css = self.get_conditionalsubsets(teea)
+        self.conditionalsubsets = {
+            # Tech/time subsets conditional by ener/area
+            'TTH_ea': css['tfrm','hourly'], # Hourly transformation techs by (ener,area)
+            'TXH_ea': css['trms','hourly'], # Hourly transmission techs by (ener, exporting area)
+            'TIH_ea': css['dest','hourly'], # Hourly transmission techs by (ener, importing area)
+            'TSH_ea': css['stor','hourly'], # Hourly storage techs by (ener,area)
+            'TTW_ea': css['tfrm','weekly'], # Weekly transformation techs by (ener,area)
+            'TXW_ea': css['trms','weekly'], # Weekly transmission techs by (ener,exporting area)
+            'TIW_ea': css['dest','yearly'], # Weekly transmission techs by (ener,importing area)
+            'TSW_ea': css['stor','weekly'], # Weekly storage techs by (ener,area)
+            'TTY_ea': css['tfrm','yearly'], # Yearly transformation techs by (ener,area)
+            'TXY_ea': css['trms','yearly'], # Yearly transmission techs by (ener,exporting area)
+            'TIY_ea': css['dest','yearly'], # Yearly transmission techs by (ener,importing area)
+            'TSY_ea': css['stor','yearly'], # Yearly storage techs by (ener,area)
+        }
+
+    def get_conditionalsubsets(self, tee: object) -> dict:
+        """Compute dict of tech subsets conditional on ener and area from tee dataframe."""
         # Loop over energy carriers and areas and make technology type subset list of techs
-        s = {}
-        ss = {}
-        for y in ['tfrm','trms','stor']:
-            for t in ['hourly','weekly','yearly']:
-                ss[y,t] = {}
+        css = {}  # Dict of dict of lists
+        for r in ['tfrm','trms','stor']:
+            for f in ['hourly','weekly','yearly']:
+                css[r,f] = {}
                 # Get a tech and time search 0/1 list for length of te_full 
-                search_yt = (te_full['type']==y) & (te_full['time']==t)
-                # Get the tech labels for 
-                s[y,t] = list(set(te_full.loc[search_yt].tech.tolist()))
+                search_rf = (tee['type']==r) & (tee['time']==f)
                 for e in self.e_data.ener.tolist():
                     for a in self.a_data.area.tolist():
                         # Get tech/time lists by area and energy carrier
-                        search_ea = (search_yt & (te_full['area']==a) & (te_full['ener']==e))
-                        ss[y,t][e,a] = list(set(te_full.loc[search_ea].tech.tolist()))
+                        search_ea = (search_rf & (tee['area']==a) & (tee['ener']==e))
+                        css[r,f][e,a] = list(set(tee.loc[search_ea]['tech'].tolist()))
                         # For transmission, we need additional set for destination area
-                        if y=='trms':
-                            ss['dest',t] = {}
-                            search = (search_yt &  (te_full['dest']==a) & (te_full['ener']==e))
-                            ss['dest',t][e,a] = list(set(te_full.loc[search].tech.tolist()))
-        self.ss = ss
-        self.s = s
-
-        # Declare and assign utility dicts
-        # dict of empty lists spanning combinations of all areas and energy carriers
-        self.util = {
-            # Full subsets by tech/time combination
-            'TTH': s['tfrm','hourly'],     # Hourly transformation techs for all (ener,area)
-            'TXH': s['trms','hourly'],     # Hourly transmission techs for all (ener,area)
-            'TSH': s['stor','hourly'],     # Hourly storage techs for all (ener,area)
-            'TTW': s['tfrm','weekly'],     # Weekly transformation techs for all (ener,area)
-            'TXW': s['trms','weekly'],     # Weekly transmission techs for all (ener,area)
-            'TSW': s['stor','weekly'],     # Weekly storage techs for all (ener,area)
-            'TTY': s['tfrm','yearly'],     # Annual transformation techs for all (ener,area)
-            'TXY': s['trms','yearly'],     # Annual transmission techs for all (ener,area)
-            'TSY': s['stor','yearly'],     # Annual storage techs for all (ener,area)
-            # Tech/time subsets conditional by ener/area
-            'TTH_ea': ss['tfrm','hourly'], # Hourly transformation techs by (ener,area)
-            'TXH_ea': ss['trms','hourly'], # Hourly transmission techs by (ener, exporting area)
-            'TIH_ea': ss['dest','hourly'], # Hourly transmission techs by (ener, importing area)
-            'TSH_ea': ss['stor','hourly'], # Hourly storage techs by (ener,area)
-            'TTW_ea': ss['tfrm','weekly'], # Weekly transformation techs by (ener,area)
-            'TXW_ea': ss['trms','weekly'], # Weekly transmission techs by (ener,exporting area)
-            'TIW_ea': ss['dest','yearly'], # Weekly transmission techs by (ener,importing area)
-            'TSW_ea': ss['stor','weekly'], # Weekly storage techs by (ener,area)
-            'TTY_ea': ss['tfrm','yearly'], # Annual transformation techs by (ener,area)
-            'TXY_ea': ss['trms','yearly'], # Annual transmission techs by (ener,exporting area)
-            'TIY_ea': ss['dest','yearly'], # Annual transmission techs by (ener,importing area)
-            'TSY_ea': ss['stor','yearly'], # Annual storage techs by (ener,area)
-        }
-
-    def set_sets(self):
-        """Create dict for primary sets"""
-        self.sets = {
-            'E': self.e_data['ener'].to_list(),    # Energy carriers
-            'A': self.a_data['area'].to_list(),    # Areas
-            'T': self.t_data['tech'].to_list(),    # Technologies
-            'W': self.w_data['week'].to_list(),    # Weeks
-            'H': self.h_data['hour'].to_list(),    # Hours
-        }
+                        if r=='trms':
+                            css['dest',f] = {}
+                            search = (search_rf & (tee['dest']==a) & (tee['ener']==e))
+                            css['dest',f][e,a] = list(set(tee.loc[search].tech.tolist()))
+        return css
 
 
     def set_para_hourly(self):
@@ -110,79 +128,60 @@ class PyMorelData():
         # Stack wh_data availability from wide format (hours x weeks in rows and availability types in columns)
         # to long format (availability type x hours x weeks) in rows and one column for values 
         wh = self.wh_data.set_index(['week','hour']).stack().reset_index()
-        wh.columns = ['week','hour','avai','ava']
-        wh = pandas.merge(self.t_data[['tech','type','avai']], wh, on='avai').drop(['avai'], axis=1)
-        wh['key'] = wh[['tech','week','hour']].apply(tuple,axis=1)
-        wh_t = wh [wh.type=='tfrm']
-        wh_s = wh [wh.type=='stor']
-        wh_x = wh [wh.type=='trms']
+        wh.columns = ['week','hour','vAva','ava']
+        twh = pandas.merge(self.t_data[['tech','type','vAva']], wh, on='vAva').drop(['vAva'], axis=1)
+        twh['key'] = twh[['tech','week','hour']].apply(tuple,axis=1)
+        twh_t = twh[twh.type=='tfrm']
+        twh_s = twh[twh.type=='stor']
+        twh_x = twh[twh.type=='trms']
+        
+        # Final consumption - mFin is the multiplier from the selected column lFin
+        wh.columns = ['week','hour','vFin','mFin']
+        fwh = pandas.merge(self.ea_data[['ener','area','vFin','lFin']], wh, on='vFin')
+        fwh['fin'] = fwh.lFin*fwh.mFin
+        fwh['key'] = fwh[['ener','area','week','hour']].apply(tuple,axis=1)
 
         # Declare hourly parameters with dict keys (tth,w,h)
         self.para_h = {
-            'cst_Th': dict(zip(th_t.key,th_t.cst)), # Hourly unit cost of transformation technology
-            'cst_Sh': dict(zip(th_s.key,th_s.cst)), # Hourly unit cost of storage technology
-            'cst_Xh': dict(zip(th_x.key,th_x.cst)), # Hourly unit cost of transmission technology
-            'ava_Th': dict(zip(wh_t.key,wh_t.ava)), # Hourly availability of transformation technology 
-            'ava_Xh': dict(zip(wh_x.key,wh_x.ava)), # Hourly availability of transmission export technology
-            'ava_Ih': dict(zip(wh_x.key,wh_x.ava)), # Hourly availability of transmission import technology
-            'ava_Sh': dict(zip(wh_s.key,wh_s.ava)), # Hourly availability of storage at storage technology
-            'ava_Dh': dict(zip(wh_s.key,wh_s.ava)), # Hourly availability of discharge at storage technology
-            'ava_Vh': dict(zip(wh_s.key,wh_s.ava)), # Hourly availability of volume at storage technology
+            'cst_Th': dict(zip(th_t.key,th_t.cst)),     # Hourly unit cost of transformation technology
+            'cst_Sh': dict(zip(th_s.key,th_s.cst)),     # Hourly unit cost of storage technology
+            'cst_Xh': dict(zip(th_x.key,th_x.cst)),     # Hourly unit cost of transmission technology
+            'ava_Th': dict(zip(twh_t.key,twh_t.ava)),   # Hourly availability of transformation technology 
+            'ava_Xh': dict(zip(twh_x.key,twh_x.ava)),   # Hourly availability of transmission export technology
+            'ava_Ih': dict(zip(twh_x.key,twh_x.ava)),   # Hourly availability of transmission import technology
+            'ava_Sh': dict(zip(twh_s.key,twh_s.ava)),   # Hourly availability of storage at storage technology
+            'ava_Dh': dict(zip(twh_s.key,twh_s.ava)),   # Hourly availability of discharge at storage technology
+            'ava_Vh': dict(zip(twh_s.key,twh_s.ava)),   # Hourly availability of volume at storage technology
+            'fin_h': dict(zip(fwh.key,fwh.fin)),        # Hourly final consumption by ener, area, week and hour
         }
 
     def set_para_yearly(self):
         """Make dict for all yearly model parameters."""
-        # Declare technologies' annual parameters with dict keys of (t) and (e,t)
+        # Declare technologies' yearly parameters with dict keys of (t) and (e,t)
         
+        # Energy efficiency by energy carrier and technology (ener,tech): effe
         te = self.te_data
         te['key'] = te[['ener','tech']].apply(tuple,axis=1)
-        print(te)
         
+        # Initial and maximum capacity of technology 
+        # select this year and add type to dataframe ty
+        ty = self.ty_data[self.ty_data.year=='y2020']
+        ty  = pandas.merge(ty, self.t_data[['tech','type']], on='tech')
+        ty['key'] = ty[['tech']].apply(tuple,axis=1)
+        ty_t = ty[ty.type=='tfrm']
+        ty_x = ty[ty.type=='trms']
+        ty_s = ty[ty.type=='stor']        
+
         self.para_y = {
-            'eff': dict(zip(te.key,te.effe)),       # Conversion efficiency by (ener,tech)
-            'ini_T': {},     # Initial capacity of transformation technology by (tech)
-            'ini_X': {},     # Initial capacity of transmission export technology
-            'ini_I': {},     # Initial capacity of transmission import technology
-            'ini_S': {},     # Initial capacity of storage technology by storage capacity
-            'ini_D': {},     # Initial capacity of storage technology by discharge capacity
-            'ini_V': {},     # Initial capacity of storage technology by volume capacity
+            'eff': dict(zip(te.key,te.effe)),           # Conversion efficiency by (ener,tech)
+            'ini_T': dict(zip(ty_t.key,ty_t.iniC)),     # Initial capacity of transformation technology by (tech)
+            'ini_X': dict(zip(ty_x.key,ty_x.iniC)),     # Initial capacity of transmission export technology
+            'ini_I': dict(zip(ty_x.key,ty_x.iniC)),     # Initial capacity of transmission import technology
+            'ini_S': dict(zip(ty_s.key,ty_s.iniC)),     # Initial capacity of storage technology by storage capacity
+            'ini_D': dict(zip(ty_s.key,ty_s.iniC)),     # Initial capacity of storage technology by discharge capacity
+            'ini_V': dict(zip(ty_s.key,ty_s.iniC)),     # Initial capacity of storage technology by volume capacity
+            'max_C': dict(zip(ty.key,ty.maxC))          # Maximum capacity of all technologies 
         }
-        print(self.para_y)
-
-    def misc_tmp(self):
-        # temporary function for misc to be rewritten soon
-        # Transformation variable costs including fuel, money/energy input
-        self.para['cst_TIh'] = {}
-        for tth in self.sets['tth']:
-            for w in self.sets['w']:
-                for h in self.sets['h']:
-                    self.para['cst_TIh'][tth,w,h] = 50
-
-        # Maximum transformation capacity by input
-        self.para['max_TIh'] = {}
-        for tth in self.sets['tth']:
-            for w in self.sets['w']:
-                for h in self.sets['h']:
-                    self.para['max_TIh'][tth,w,h] = 100
-
-        # Transmission efficiency (100% - loss %)
-        self.para['eff_X'] = {('x_dk_no'): 0.95, ('x_dk_de'): 0.95 }
-
-        # Transmission capacity 
-        self.para['max_X1h'] = { }
-        self.para['max_X2h'] = { }
-        for txh in self.sets['txh']:
-            for w in self.sets['w']:
-                for h in self.sets['h']:
-                    self.para['max_X1h'][(txh,w,h)] = 50
-                    self.para['max_X2h'][(txh,w,h)] = 50
-        # Demand
-        self.para['lvl_DEh'] = {}
-        for e in self.sets['e']:
-            for a in self.sets['a']:
-                for w in self.sets['w']:
-                    for h in self.sets['h']:
-                        self.para['lvl_DEh'][(e,a,w,h)] = 50
 
 
     def get_default_data(self) -> dict:
@@ -195,18 +194,21 @@ class PyMorelData():
         # Energy carrier database
         data['e_data'] = { 
             'ener': ['elec',    'dhea',     'ngas'      ], 
+### TODO: Rename time to freq
             'time': ['hourly',  'hourly',   'yearly'    ],
         }
         data['ea_data'] = {
-            'ener': ['elec', 'elec', 'elec', 'dhea', 'dhea', 'dhea', ],
-            'area': ['dk0',  'de0',  'no0',  'dk0',  'de0',  'no0',  ],
-            'dmnd': [40.00,  400.0,  40.00,  80.00,  800.0,  50.00,  ],
+            'ener': ['elec',    'elec',    'elec',    'dhea',    'dhea',    'dhea',    ],
+            'area': ['dk0',     'de0',     'no0',     'dk0',     'de0',     'no0',     ],
+            'lFin': [40.00,     400.0,     40.00,     80.00,     800.0,     50.00,     ],
+            'vFin': ['varElec', 'varElec', 'varElec', 'varDHea', 'varDHea', 'varDHea', ], 
         }
         # Technology database
         data['t_data'] = {
             # Technology name (duplicates as technology set)
             'tech': ['bpgt_dk0','bpgt_de0','bpgt_no0','wind_dk0','wind_de0','wind_no0','sopv_dk0','sopv_de0','sopv_no0',],
             # Type: tfrm: transformation, tmis: transmission, stor: storage
+### TODO: Rename type to role
             'type': ['tfrm',    'tfrm',    'tfrm',    'tfrm',    'tfrm',    'tfrm',    'tfrm',    'tfrm',    'tfrm',    ],
             # Area of location
             'area': ['dk0',     'de0',     'no0',     'dk0',     'de0',     'no0',     'dk0',     'de0',     'no0',     ],
@@ -229,7 +231,7 @@ class PyMorelData():
             # Maximum potential investment, MW
             'pcap': ['Inf',     'Inf',     'Inf',     'Inf',     'Inf',     'Inf',     'Inf',     'Inf',     'Inf',     ],
             # Availability choice, % per hour/week/year
-            'avai': ['uniform' ,'uniform' ,'uniform' ,'wind_dk', 'wind_de', 'wind_no', 'dayonly', 'dayonly', 'dayonly', ], 
+            'vAva': ['uniform' ,'uniform' ,'uniform' ,'wind_dk', 'wind_de', 'wind_no', 'dayonly', 'dayonly', 'dayonly', ], 
         }
         # Technology/energt carrier database
         data['te_data'] = {
@@ -237,7 +239,7 @@ class PyMorelData():
             'tech': ['bpgt_dk0','bpgt_de0','bpgt_no0','bpgt_dk0','bpgt_de0','bpgt_no0','bpgt_dk0','bpgt_de0','bpgt_no0',
                      'wind_dk0','wind_de0','wind_no0','sopv_dk0','sopv_de0','sopv_no0',],
             # Energy carrier
-            'ener': ['elec',    'elec',    'elec',    'chea',    'chea',    'chea',    'ngas',    'ngas',    'ngas',    
+            'ener': ['elec',    'elec',    'elec',    'dhea',    'dhea',    'dhea',    'ngas',    'ngas',    'ngas',    
                      'elec',    'elec',    'elec',    'elec',    'elec',    'elec',],
             # Efficiency by energy carrier, share of total energy input
             # Negative means energy input, positive means energy output
@@ -275,8 +277,15 @@ class PyMorelData():
             'wnd_de':   [0.300, 0.600, 0.700, 0.300, 0.200, 0.400, 0.300, 0.100, 0.000, 0.200, 0.200, 0.100,
                          0.100, 0.300, 0.600, 0.700, 0.700, 0.800, 0.800, 0.700, 0.700, 0.600, 0.400, 0.300,
                          0.000, 0.200, 0.300, 0.000,],
+            'varElec':  [0.400, 0.700, 0.900, 0.800, 0.300, 0.800, 1.000, 0.900, 0.400, 0.700, 0.900, 0.800,
+                         0.200, 0.700, 0.800, 0.800, 0.400, 0.800, 0.900, 0.800, 0.500, 0.600, 0.800, 0.800,
+                         0.500, 0.800, 0.800, 0.600,],
+            'varDhea':  [0.900, 0.700, 0.500, 0.800, 1.000, 0.800, 0.600, 0.900, 0.800, 0.600, 0.400, 0.800,
+                         0.900, 0.700, 0.500, 0.800, 1.000, 0.800, 0.600, 0.900, 0.800, 0.600, 0.400, 0.800,
+                         0.500, 0.400, 0.400, 0.600,],
+            
         }
-        # Annual technology data - index: (tech,year)
+        # Yearly technology data - index: (tech,year)
         data['ty_data'] = {
             'tech':     ['bpgt_dk0','bpgt_de0','bpgt_no0','wind_dk0','wind_de0','wind_no0','sopv_dk0','sopv_de0','sopv_no0',],
             'year':     ['y2020',   'y2020',   'y2020',   'y2020',   'y2020',   'y2020',   'y2020',   'y2020',   'y2020',   ],
@@ -324,5 +333,18 @@ class PyMorelData():
         ha.columns = ['avai','hour','val']
         ha = pandas.merge(t[['tech','avai']], ha, on='avai').drop(['avai'], axis=1)
         ha['key'] = ha[['tech','hour']].apply(tuple,axis=1)
-        
+
+    def testdataframes2(self):
+        """More example dataframes for testing dataframe functionality, not for model inclusion."""
+        t = pandas.DataFrame(data=
+            { 'tech': ['t1','t2','t3', ],
+              'type': ['aa','bb','cc', ]
+            })
+        ty = pandas.DataFrame(data=
+            { 'tech': ['t1','t2','t3', ],
+              'year': ['y1','y1','y2', ]
+            })
+
+
+
 pmd = PyMorelData()
