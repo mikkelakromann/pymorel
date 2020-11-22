@@ -119,7 +119,7 @@ class PyMorelData():
         # outer join of tech, week & hours so that we get a tech x (week x hour) matrix
         # Join on artificial key A=1 set for all rows in t_data and wh_data
         th = pandas.merge(self.t_data.assign(A=1), self.wh_data.assign(A=1), on='A').drop('A',1)
-        th['cst'] = th.vopx * th.uniform
+        th['cst'] = th.cstV * th.uniform
         th['key'] = th[['tech','week','hour']].apply(tuple,axis=1)
         th_t = th[th.type=='tfrm']
         th_s = th[th.type=='stor']
@@ -166,7 +166,7 @@ class PyMorelData():
         # Initial and maximum capacity of technology 
         # select this year and add type to dataframe ty
         ty = self.ty_data[self.ty_data.year=='y2020']
-        ty  = pandas.merge(ty, self.t_data[['tech','type']], on='tech')
+        ty  = pandas.merge(ty, self.t_data[['tech','type','cstC']], on='tech')
         ty['key'] = ty[['tech']].apply(tuple,axis=1)
         ty_t = ty[ty.type=='tfrm']
         ty_x = ty[ty.type=='trms']
@@ -180,7 +180,8 @@ class PyMorelData():
             'ini_S': dict(zip(ty_s.key,ty_s.iniC)),     # Initial capacity of storage technology by storage capacity
             'ini_D': dict(zip(ty_s.key,ty_s.iniC)),     # Initial capacity of storage technology by discharge capacity
             'ini_V': dict(zip(ty_s.key,ty_s.iniC)),     # Initial capacity of storage technology by volume capacity
-            'max_C': dict(zip(ty.key,ty.maxC))          # Maximum capacity of all technologies 
+            'max_C': dict(zip(ty.key,ty.maxC)),         # Maximum capacity of all technologies 
+            'cst_C': dict(zip(ty.key,ty.cstC)),         # Cost of capacity of all technologies 
         }
 
 
@@ -217,11 +218,11 @@ class PyMorelData():
             # Availability 
             'avai': ['uniform', 'uniform', 'uniform', 'wnd_dk',  'wnd_dk',  'wnd_dk',  'dayonly', 'dayonly', 'dayonly', ],
             # Capital expenditure, money/MW
-            'capx': [1.00,      1.00,      1.00,      2.00,      2.00,      2.00,      1.00,      1.00,      1.00,      ],
+            'cstC': [1.00,      1.00,      1.00,      2.00,      2.00,      2.00,      1.00,      1.00,      1.00,      ],
             # Fixed operational expenditure, money/MW/year
-            'fopx': [50000,     50000,     50000,     50000,     50000,     50000,     25000,     25000,     25000,     ],
+            'cstF': [50000,     50000,     50000,     50000,     50000,     50000,     25000,     25000,     25000,     ],
             # Variable operational costs, money/MWh
-            'vopx': [1,         1,         1,         1,         1,         1,         0,         0,         0,         ],
+            'cstV': [1,         1,         1,         1,         1,         1,         0,         0,         0,         ],
             # Already installed capacity in modelling year, MW
             'inic': [5000,      80000,     5000,      4000,      5000,      1000,      1000,      20000,     0          ],
             # Ratio between capacity of S and V for storaage

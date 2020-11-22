@@ -1,5 +1,5 @@
 from pyomo.environ import Objective, Constraint, Var, Set, Param
-from pyomo.environ import Binary, NonNegativeReals 
+from pyomo.environ import NonNegativeReals 
 from pyomo.environ import SolverFactory, ConcreteModel
 
 
@@ -93,6 +93,9 @@ class PyMorelModel():
         m.conditionalsubset['TXY_ea'] = get_subset(css['TXY_ea'],TXY)  # Transmission yearly technologies
         m.conditionalsubset['TIY_ea'] = get_subset(css['TIY_ea'],TXY)  # Transmission yearly technologies
 
+        print(css['TTH_ea'])
+        m.conditionalsubset['TTH_ea'].pprint()
+        
 
         ###############################################################################################################
         # Variable declaration and assignment
@@ -178,10 +181,10 @@ class PyMorelModel():
         cst_vopex = 0
         # Fuel costs are tied to input to generation, only exogenous fuel costs
         # TODO: Multiply with weights for weeks x hours
-        cst_fuels = sum(m.Th[tth,w,h]*m.cst_Th[tth,w,h] for tth in m.TTH for w in m.W for h in m.H)
-        cst_store = sum(m.Sh[tsh,w,h]*m.cst_Sh[tsh,w,h] for tsh in m.TSH for w in m.W for h in m.H)
+        cst_fuels_h = sum(m.Th[tth,w,h]*m.cst_Th[tth,w,h] for tth in m.TTH for w in m.W for h in m.H)
+        cst_store_h = sum(m.Sh[tsh,w,h]*m.cst_Sh[tsh,w,h] for tsh in m.TSH for w in m.W for h in m.H)
         # Total costs is sum of CAPEX, Fixed OPEX, variable OPEX and fuel costs
-        cst_total = cst_capex + cst_fopex + cst_vopex + cst_fuels
+        cst_total = cst_capex + cst_fopex + cst_vopex + cst_fuels_h + cst_store_h
         return cst_total
     
     ###################################################################################################################
