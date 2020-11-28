@@ -43,33 +43,60 @@ class PyMorelData():
         # Merge tech type and time onto te in order to compute subsets of technologies
         tee = pandas.merge(te,e[['ener','time']], on='ener')
         tee = pandas.merge(tee,t, on='tech')
+        tee['key_eat'] = tee[['ener','area','tech']].apply(tuple,axis=1) 
         
+        # Copy all transmission technologies in order to put the import flows
+        # into the TI*_ea subsets. 
+        # Now, dest becomes the origin area of the export
+        dst = tee[tee.type=='trms']
+        dst['key_eat'] = dst[['ener','dest','tech']].apply(tuple,axis=1) 
         # Save the main simple subsets in a dict of lists { 'TC': }
         self.subsets = {
+            # Technology subsets by role 
             'TC':  ty['tech'][ty.maxC>0].to_list(),              # Technologies that can be invested in
             'TT':  t['tech'][t.type=='tfrm'].to_list(),          # Technologies for transformation
             'TX':  t['tech'][t.type=='trms'].to_list(),          # Technologies for transmission
             'TS':  t['tech'][t.type=='stor'].to_list(),          # Technologies for storage
+            # Energy carrier subsets by trading frequency
             'EH':  e['ener'][e.time=='hourly'].to_list(),        # Energy carriers traded hourly
             'EW':  e['ener'][e.time=='weekly'].to_list(),        # Energy carriers traded weekly
             'EY':  e['ener'][e.time=='yearly'].to_list(),        # Energy carriers traded yearly
-            # Transformation technologies by time
+            # Transformation technologies by freq
             'TTH': tee['tech'][(tee.type=='tfrm') & (tee.time=='hourly')].to_list(),
             'TTW': tee['tech'][(tee.type=='tfrm') & (tee.time=='weekly')].to_list(),
             'TTY': tee['tech'][(tee.type=='tfrm') & (tee.time=='yearly')].to_list(),
-            # Transmission technologies by time
+            # Transmission technologies by freq
             'TXH': tee['tech'][(tee.type=='trms') & (tee.time=='hourly')].to_list(),
             'TXW': tee['tech'][(tee.type=='trms') & (tee.time=='weekly')].to_list(),
             'TXY': tee['tech'][(tee.type=='trms') & (tee.time=='yearly')].to_list(),
-            # Storage technologies by time
+            # Storage technologies by freq
             'TSH': tee['tech'][(tee.type=='stor') & (tee.time=='hourly')].to_list(),
             'TSW': tee['tech'][(tee.type=='stor') & (tee.time=='weekly')].to_list(),
             'TSY': tee['tech'][(tee.type=='stor') & (tee.time=='yearly')].to_list(),
+            # Transformation technologies by freq
+            'TTH_ea': tee['key_eat'][(tee.type=='tfrm') & (tee.time=='hourly')].to_list(),
+            'TTW_ea': tee['key_eat'][(tee.type=='tfrm') & (tee.time=='weekly')].to_list(),
+            'TTY_ea': tee['key_eat'][(tee.type=='tfrm') & (tee.time=='yearly')].to_list(),
+            # Transmission technologies by freq - exporting areas
+            'TXH_ea': tee['key_eat'][(tee.type=='trms') & (tee.time=='hourly')].to_list(),
+            'TXW_ea': tee['key_eat'][(tee.type=='trms') & (tee.time=='weekly')].to_list(),
+            'TXY_ea': tee['key_eat'][(tee.type=='trms') & (tee.time=='yearly')].to_list(),
+            # Transmission technologies by freq - exporting areas
+            'TIH_ea': dst['key_eat'][(dst.type=='trms') & (tee.time=='hourly')].to_list(),
+            'TIW_ea': dst['key_eat'][(dst.type=='trms') & (tee.time=='weekly')].to_list(),
+            'TIY_ea': dst['key_eat'][(dst.type=='trms') & (tee.time=='yearly')].to_list(),
+            # Storage technologies by freq
+            'TSH_ea': tee['key_eat'][(tee.type=='stor') & (tee.time=='hourly')].to_list(),
+            'TSW_ea': tee['key_eat'][(tee.type=='stor') & (tee.time=='weekly')].to_list(),
+            'TSY_ea': tee['key_eat'][(tee.type=='stor') & (tee.time=='yearly')].to_list(),
+            # All (ener,area,tech) combos
+            'EAT': tee['key_eat'].to_list() + dst['key_eat'].to_list()
         }
 
         # Conditional subsets (css) is a (role,freq)-dict of (ener,area)-dicts of tech-lists e.g.
         # css = { ('tfrm','hourly'): {('elec','dk0'): ['dk_wind','dk_ccgt'], ('heat','dk0'): [dk_ccgt], ...}, ... }
         teea = pandas.merge(tee, a, on='area')
+        teea['key'] = teea[['ener','area','tech']].apply(tuple,axis=1) 
         css = self.get_conditionalsubsets(teea)
         self.conditionalsubsets = {
             # Tech/time subsets conditional by ener/area

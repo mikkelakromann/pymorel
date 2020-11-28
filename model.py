@@ -78,23 +78,20 @@ class PyMorelModel():
         TSY = m.TSY = get_subset(subsets['TSY'],TS)   # Technologies for (S)torage (Y)early 
         
         # tech/time subsets conditional on ener/area - store cond. subsets in a dict
-        css = self.data.conditionalsubsets
-        m.conditionalsubset = {}
-        m.conditionalsubset['TTH_ea'] = get_subset(css['TTH_ea'],TTH)  # Transformation hourly technologies
-        m.conditionalsubset['TSH_ea'] = get_subset(css['TSH_ea'],TSH)  # Storage hourly technologies
-        m.conditionalsubset['TXH_ea'] = get_subset(css['TXH_ea'],TXH)  # Export hourly technologies
-        m.conditionalsubset['TIH_ea'] = get_subset(css['TIH_ea'],TXH)  # Import hourly technologies
-        m.conditionalsubset['TTW_ea'] = get_subset(css['TTW_ea'],TTW)  # Transformation weekly technologies
-        m.conditionalsubset['TSW_ea'] = get_subset(css['TSW_ea'],TSW)  # Storage weekly technologies
-        m.conditionalsubset['TXW_ea'] = get_subset(css['TXW_ea'],TXW)  # Export weekly technologies
-        m.conditionalsubset['TIW_ea'] = get_subset(css['TIW_ea'],TXW)  # Import weekly technologies
-        m.conditionalsubset['TTY_ea'] = get_subset(css['TTY_ea'],TTY)  # Transformation yearly technologies
-        m.conditionalsubset['TSY_ea'] = get_subset(css['TSY_ea'],TSY)  # Storage yearly technologies
-        m.conditionalsubset['TXY_ea'] = get_subset(css['TXY_ea'],TXY)  # Transmission yearly technologies
-        m.conditionalsubset['TIY_ea'] = get_subset(css['TIY_ea'],TXY)  # Transmission yearly technologies
+        EAT = subsets['EAT']
+        m.TTH_ea = get_subset(subsets['TTH_ea'],EAT)  # Transformation hourly technologies
+        m.TXH_ea = get_subset(subsets['TXH_ea'],EAT)  # Export hourly technologies
+        m.TIH_ea = get_subset(subsets['TIH_ea'],EAT)  # Import hourly technologies
+        m.TSH_ea = get_subset(subsets['TSH_ea'],EAT)  # Storage hourly technologies
+        m.TTW_ea = get_subset(subsets['TTW_ea'],EAT)  # Transformation weekly technologies
+        m.TXW_ea = get_subset(subsets['TXW_ea'],EAT)  # Export weekly technologies
+        m.TIW_ea = get_subset(subsets['TIW_ea'],EAT)  # Import weekly technologies
+        m.TSW_ea = get_subset(subsets['TSW_ea'],EAT)  # Storage weekly technologies
+        m.TTY_ea = get_subset(subsets['TTY_ea'],EAT)  # Transformation yearly technologies
+        m.TXY_ea = get_subset(subsets['TXY_ea'],EAT)  # Transmission yearly technologies
+        m.TIY_ea = get_subset(subsets['TIY_ea'],EAT)  # Transmission yearly technologies
+        m.TSY_ea = get_subset(subsets['TSY_ea'],EAT)  # Storage yearly technologies
 
-        print(css['TTH_ea'])
-        m.conditionalsubset['TTH_ea'].pprint()
         
 
         ###############################################################################################################
@@ -201,31 +198,34 @@ class PyMorelModel():
 
         # Transformation between energy carriers: eff>0 is output, eff<0 is input
         # For heat pumps, eff needs to be modified to depend on time
-        tra = sum(m.Th[tth,w,h]*m.eff[e,tth] for tth in m.conditionalsubset['TTH_ea'][e,a])
+        # TTH_ea is a list of (ener,area,tech) hour transformation technologies
+        # (e,a) is under control already, so summing will yield the techs
+        tra = sum(m.Th[tth,w,h]*m.eff[e,tth] for (e,a,tth) in m.TTH_ea)
 
         # Gross import from area a - transmission technologies are directional
         # I is import into the owner area 
         # X is export from another owner area turned into import to this destination area
-        imp = sum(m.Ih[txh,w,h]*m.eff[e,txh] for txh in m.conditionalsubset['TXH_ea'][e,a])\
-             +sum(m.Xh[tih,w,h]*m.eff[e,tih] for tih in m.conditionalsubset['TIH_ea'][e,a])
+        imp = sum(m.Ih[txh,w,h]*m.eff[e,txh] for (e,a,txh) in m.TXH_ea)\
+             +sum(m.Xh[tih,w,h]*m.eff[e,tih] for (e,a,tih) in m.TIH_ea)
                   
         # Gross export from area a - transmission technologies are directional
         # so export for the owner is import to the receiver
-        exp = sum(m.Xh[txh,w,h] for txh in m.conditionalsubset['TXH_ea'][e,a])\
-             +sum(m.Ih[tih,w,h] for tih in m.conditionalsubset['TIH_ea'][e,a])
+        exp = sum(m.Xh[txh,w,h] for (e,a,txh) in m.TXH_ea)\
+             +sum(m.Ih[tih,w,h] for (e,a,tih) in m.TIH_ea)
  
         # Storage and discharge
-        sto = sum(m.Sh[tsh,w,h] for tsh in m.conditionalsubset['TSH_ea'][e,a])
-        dis = sum(m.Dh[tsh,w,h] for tsh in m.conditionalsubset['TSH_ea'][e,a])
+        sto = sum(m.Sh[tsh,w,h] for (e,a,tsh) in m.TSH_ea)
+        dis = sum(m.Dh[tsh,w,h] for (e,a,tsh) in m.TSH_ea)
 
         # Final consumption (gross)
         fin = m.fin_h[e,a,w,h]
 
         # Return equilibrium constraint rule if any
-        if tra or exp or imp or sto or dis or fin:
-            return tra + dis + imp == fin + sto + exp
-        else:
-            return Constraint.Skip
+#        if tra or exp or imp or sto or dis or fin:
+#            return tra + dis + imp == fin + sto + exp
+#        else:
+#            return Constraint.Skip
+        return tra + dis + imp == fin + sto + exp
     
     ###################################################################################################################
     #
@@ -284,6 +284,12 @@ class PyMorelModel():
         """Solve model."""
         self.solver = SolverFactory('glpk')             # 'solver' often named 'opt' in Pyomo docs: https://pyomo.readthedocs.io/en/stable/working_models.html
         self.results = self.solver.solve(self.model)
+
+    def report(self):
+        self.model.TTH.pprint()
+        self.model.TTH_ea.pprint()
+        print(self.results)
+        
 
     def print_debug(self):
         """Print debug information."""
