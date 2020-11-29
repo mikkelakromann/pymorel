@@ -42,8 +42,8 @@ class PyMorelData():
             'H':  h['hour'].to_list(),                          # Hours
         }
 
-        # Merge tech role and time onto te in order to compute subsets of technologies
-        tee = pandas.merge(te,e[['ener','time']], on='ener')
+        # Merge tech role and trading frequency onto te in order to compute subsets of technologies
+        tee = pandas.merge(te,e[['ener','tfrq']], on='ener')
         tee = pandas.merge(tee,t, on='tech')
         tee['key_eat'] = tee[['ener','area','tech']].apply(tuple,axis=1)
 
@@ -60,37 +60,37 @@ class PyMorelData():
             'TX':  t['tech'][t.role == 'trms'].to_list(),          # Technologies for transmission
             'TS':  t['tech'][t.role == 'stor'].to_list(),          # Technologies for storage
             # Energy carrier subsets by trading frequency
-            'EH':  e['ener'][e.time == 'hourly'].to_list(),        # Energy carriers traded hourly
-            'EW':  e['ener'][e.time == 'weekly'].to_list(),        # Energy carriers traded weekly
-            'EY':  e['ener'][e.time == 'yearly'].to_list(),        # Energy carriers traded yearly
+            'EH':  e['ener'][e.tfrq == 'hourly'].to_list(),        # Energy carriers traded hourly
+            'EW':  e['ener'][e.tfrq == 'weekly'].to_list(),        # Energy carriers traded weekly
+            'EY':  e['ener'][e.tfrq == 'yearly'].to_list(),        # Energy carriers traded yearly
             # Transformation technologies by freq
-            'TTH': tee['tech'][(tee.role == 'tfrm') & (tee.time == 'hourly')].to_list(),
-            'TTW': tee['tech'][(tee.role == 'tfrm') & (tee.time == 'weekly')].to_list(),
-            'TTY': tee['tech'][(tee.role == 'tfrm') & (tee.time == 'yearly')].to_list(),
+            'TTH': tee['tech'][(tee.role == 'tfrm') & (tee.tfrq == 'hourly')].to_list(),
+            'TTW': tee['tech'][(tee.role == 'tfrm') & (tee.tfrq == 'weekly')].to_list(),
+            'TTY': tee['tech'][(tee.role == 'tfrm') & (tee.tfrq == 'yearly')].to_list(),
             # Transmission technologies by freq
-            'TXH': tee['tech'][(tee.role == 'trms') & (tee.time == 'hourly')].to_list(),
-            'TXW': tee['tech'][(tee.role == 'trms') & (tee.time == 'weekly')].to_list(),
-            'TXY': tee['tech'][(tee.role == 'trms') & (tee.time == 'yearly')].to_list(),
+            'TXH': tee['tech'][(tee.role == 'trms') & (tee.tfrq == 'hourly')].to_list(),
+            'TXW': tee['tech'][(tee.role == 'trms') & (tee.tfrq == 'weekly')].to_list(),
+            'TXY': tee['tech'][(tee.role == 'trms') & (tee.tfrq == 'yearly')].to_list(),
             # Storage technologies by freq
-            'TSH': tee['tech'][(tee.role == 'stor') & (tee.time == 'hourly')].to_list(),
-            'TSW': tee['tech'][(tee.role == 'stor') & (tee.time == 'weekly')].to_list(),
-            'TSY': tee['tech'][(tee.role == 'stor') & (tee.time == 'yearly')].to_list(),
+            'TSH': tee['tech'][(tee.role == 'stor') & (tee.tfrq == 'hourly')].to_list(),
+            'TSW': tee['tech'][(tee.role == 'stor') & (tee.tfrq == 'weekly')].to_list(),
+            'TSY': tee['tech'][(tee.role == 'stor') & (tee.tfrq == 'yearly')].to_list(),
             # Transformation technologies by freq
-            'TTH_ea': tee['key_eat'][(tee.role == 'tfrm') & (tee.time == 'hourly')].to_list(),
-            'TTW_ea': tee['key_eat'][(tee.role == 'tfrm') & (tee.time == 'weekly')].to_list(),
-            'TTY_ea': tee['key_eat'][(tee.role == 'tfrm') & (tee.time == 'yearly')].to_list(),
+            'TTH_ea': tee['key_eat'][(tee.role == 'tfrm') & (tee.tfrq == 'hourly')].to_list(),
+            'TTW_ea': tee['key_eat'][(tee.role == 'tfrm') & (tee.tfrq == 'weekly')].to_list(),
+            'TTY_ea': tee['key_eat'][(tee.role == 'tfrm') & (tee.tfrq == 'yearly')].to_list(),
             # Transmission technologies by freq - exporting areas
-            'TXH_ea': tee['key_eat'][(tee.role == 'trms') & (tee.time == 'hourly')].to_list(),
-            'TXW_ea': tee['key_eat'][(tee.role == 'trms') & (tee.time == 'weekly')].to_list(),
-            'TXY_ea': tee['key_eat'][(tee.role == 'trms') & (tee.time == 'yearly')].to_list(),
+            'TXH_ea': tee['key_eat'][(tee.role == 'trms') & (tee.tfrq == 'hourly')].to_list(),
+            'TXW_ea': tee['key_eat'][(tee.role == 'trms') & (tee.tfrq == 'weekly')].to_list(),
+            'TXY_ea': tee['key_eat'][(tee.role == 'trms') & (tee.tfrq == 'yearly')].to_list(),
             # Transmission technologies by freq - exporting areas
-            'TIH_ea': dst['key_eat'][(dst.role == 'trms') & (tee.time == 'hourly')].to_list(),
-            'TIW_ea': dst['key_eat'][(dst.role == 'trms') & (tee.time == 'weekly')].to_list(),
-            'TIY_ea': dst['key_eat'][(dst.role == 'trms') & (tee.time == 'yearly')].to_list(),
+            'TIH_ea': dst['key_eat'][(dst.role == 'trms') & (tee.tfrq == 'hourly')].to_list(),
+            'TIW_ea': dst['key_eat'][(dst.role == 'trms') & (tee.tfrq == 'weekly')].to_list(),
+            'TIY_ea': dst['key_eat'][(dst.role == 'trms') & (tee.tfrq == 'yearly')].to_list(),
             # Storage technologies by freq
-            'TSH_ea': tee['key_eat'][(tee.role == 'stor') & (tee.time == 'hourly')].to_list(),
-            'TSW_ea': tee['key_eat'][(tee.role == 'stor') & (tee.time == 'weekly')].to_list(),
-            'TSY_ea': tee['key_eat'][(tee.role == 'stor') & (tee.time == 'yearly')].to_list(),
+            'TSH_ea': tee['key_eat'][(tee.role == 'stor') & (tee.tfrq == 'hourly')].to_list(),
+            'TSW_ea': tee['key_eat'][(tee.role == 'stor') & (tee.tfrq == 'weekly')].to_list(),
+            'TSY_ea': tee['key_eat'][(tee.role == 'stor') & (tee.tfrq == 'yearly')].to_list(),
             # All (ener,area,tech) combos
             'EAT': tee['key_eat'].to_list() + dst['key_eat'].to_list()
         }
@@ -101,7 +101,7 @@ class PyMorelData():
         teea['key'] = teea[['ener','area','tech']].apply(tuple,axis=1)
         css = self.get_conditionalsubsets(teea)
         self.conditionalsubsets = {
-            # Tech/time subsets conditional by ener/area
+            # Tech/tfrq subsets conditional by ener/area
             'TTH_ea': css['tfrm','hourly'],     # Hourly transformation techs by (ener,area)
             'TXH_ea': css['trms','hourly'],     # Hourly transmission techs by (ener, exporting area)
             'TIH_ea': css['dest','hourly'],     # Hourly transmission techs by (ener, importing area)
@@ -123,11 +123,11 @@ class PyMorelData():
         for r in ['tfrm','trms','stor']:
             for f in ['hourly','weekly','yearly']:
                 css[r,f] = {}
-                # Get a tech and time search 0/1 list for length of te_full
-                search_rf = (tee['role'] == r) & (tee['time'] == f)
+                # Get a tech and tfrq search 0/1 list for length of te_full
+                search_rf = (tee['role'] == r) & (tee['tfrq'] == f)
                 for e in self.e_data.ener.tolist():
                     for a in self.a_data.area.tolist():
-                        # Get tech/time lists by area and energy carrier
+                        # Get tech/tfrq lists by area and energy carrier
                         search_ea = (search_rf & (tee['area'] == a) & (tee['ener'] == e))
                         css[r,f][e,a] = list(set(tee.loc[search_ea]['tech'].tolist()))
                         # For transmission, we need additional set for destination area
@@ -222,8 +222,7 @@ class PyMorelData():
         # Energy carrier database
         data['e_data'] = {
             'ener': ['elec',    'dhea',     'ngas'      ],
-### TODO: Rename time to freq
-            'time': ['hourly',  'hourly',   'yearly'    ],
+            'tfrq': ['hourly',  'hourly',   'yearly'    ],
         }
         data['ea_data'] = {
             'ener': ['elec',    'elec',    'elec',    'dhea',    'dhea',    'dhea',    ],
@@ -326,7 +325,7 @@ class PyMorelData():
         import pandas
         e = pandas.DataFrame(data=
             { 'ener': ['elec','ngas','h2pr'],
-              'time': ['hour','year','week'], })
+              'tfrq': ['hour','year','week'], })
         t = pandas.DataFrame(data=
             { 'tech': ['ccgt','e2h2','ngas','batt','expt' ],
               'role': ['trfm','trfm','trfm','stor','trms'],

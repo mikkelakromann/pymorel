@@ -50,8 +50,8 @@ class PyMorelModel():
         E = m.E = get_set(sets['E'])    # Energy carrier set
         A = m.A = get_set(sets['A'])    # Areas set
         T = m.T = get_set(sets['T'])    # Technologies set
-        W = m.W = get_set(sets['W'])    # Weeks (time) set
-        H = m.H = get_set(sets['H'])    # Hours (time) set
+        W = m.W = get_set(sets['W'])    # Weeks (tfrq) set
+        H = m.H = get_set(sets['H'])    # Hours (tfrq) set
 
         # Subsets: Multi-letter upper case indicate subset of first letter superset
         subsets = self.data.subsets     # Alias with local scope
@@ -77,7 +77,7 @@ class PyMorelModel():
         TSW = m.TSW = get_subset(subsets['TSW'],TS)     # Technologies for (S)torage (W)eekly
         TSY = m.TSY = get_subset(subsets['TSY'],TS)     # Technologies for (S)torage (Y)early
 
-        # tech/time subsets conditional on ener/area - store cond. subsets in a dict
+        # tech/tfrq subsets conditional on ener/area - store cond. subsets in a dict
         EAT = subsets['EAT']
         m.TTH_ea = get_subset(subsets['TTH_ea'],EAT)  # Transformation hourly technologies
         m.TXH_ea = get_subset(subsets['TXH_ea'],EAT)  # Export hourly technologies
@@ -111,7 +111,7 @@ class PyMorelModel():
         #m.TIw = Var(ttw,w, within=NonNegativeReals)    # Energy input effect into transformation
         #m.SSw = Var(tsw,w, within=NonNegativeReals)    # Storage input effect into storage
         #m.SDw = Var(tsw,w, within=NonNegativeReals)    # Discharge output effect from storage
-        #m.SVw = Var(tsw,w, within=NonNegativeReals)    # Stored volume of energy by week 
+        #m.SVw = Var(tsw,w, within=NonNegativeReals)    # Stored volume of energy by week
         #m.X1w = Var(txw,w, within=NonNegativeReals)    # Transmission effect from 1st to 2nd area
         #m.X2w = Var(txw,w, within=NonNegativeReals)    # Transmission effect from 2nd to 1st area
 
@@ -184,7 +184,7 @@ class PyMorelModel():
     #
     #   MARKET EQUILIBRIUM FOR AREAS RULE DEFINITION
     #   Market equilibrium for energy carriers, areas, weeks and hours
-    #   ie  one equation per energy carrier, area and time step
+    #   ie one equation per energy carrier, area and trading frequency
     #
     ###################################################################################################################
 
@@ -193,7 +193,7 @@ class PyMorelModel():
         """Constraint to ensure equilibrium for hourly traded energy carriers."""
 
         # Transformation between energy carriers: eff>0 is output, eff<0 is input
-        # For heat pumps, eff needs to be modified to depend on time
+        # For heat pumps, eff needs to be modified to depend on hour and week
         # TTH_ea is a list of (ener,area,tech) hour transformation technologies
         # (e,a) is under control already, so summing will yield the techs
         tra = sum(m.Th[tth,w,h]*m.eff[e,tth] for tth in m.TTH if (e,a,tth) in m.TTH_ea)
@@ -201,17 +201,17 @@ class PyMorelModel():
         # Gross import from area a - transmission technologies are directional
         # I is import into the owner area
         # X is export from another owner area turned into import to this destination area
-        imp = sum(m.Ih[txh,w,h]*m.eff[e,txh] for (e,a,txh) in m.TXH_ea)\
-             +sum(m.Xh[tih,w,h]*m.eff[e,tih] for (e,a,tih) in m.TIH_ea)
+        imp = sum(m.Ih[txh,w,h]*m.eff[e,txh] for txh in m.TXH if (e,a,txh) in m.TXH_ea)\
+             +sum(m.Xh[tih,w,h]*m.eff[e,tih] for tih in m.TXH if (e,a,tih) in m.TIH_ea)
 
         # Gross export from area a - transmission technologies are directional
         # so export for the owner is import to the receiver
-        exp = sum(m.Xh[txh,w,h] for (e,a,txh) in m.TXH_ea)\
-             +sum(m.Ih[tih,w,h] for (e,a,tih) in m.TIH_ea)
+        exp = sum(m.Xh[txh,w,h] for txh in m.TXH if (e,a,txh) in m.TXH_ea)\
+             +sum(m.Ih[tih,w,h] for tih in m.TXH if (e,a,tih) in m.TIH_ea)
 
         # Storage and discharge
-        sto = sum(m.Sh[tsh,w,h] for (e,a,tsh) in m.TSH_ea)
-        dis = sum(m.Dh[tsh,w,h] for (e,a,tsh) in m.TSH_ea)
+        sto = sum(m.Sh[tsh,w,h] for tsh in m.TSH if (e,a,tsh) in m.TSH_ea)
+        dis = sum(m.Dh[tsh,w,h] for tsh in m.TSH if (e,a,tsh) in m.TSH_ea)
 
         # Final consumption (gross)
         fin = m.fin_h[e,a,w,h]
@@ -222,7 +222,7 @@ class PyMorelModel():
     ###################################################################################################################
     #
     #   STORAGE RELATIONS: INTERTEMPORAL AND OTHERS RULE DEFINITIONS
-    #   Storage is on a technology basis, i.e. one equation per technology and time step
+    #   Storage is on a technology basis, i.e. one equation per technology and trading frequency step
     #   Note: each technology is always connected to exactly one area
     #
     ###################################################################################################################
