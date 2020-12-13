@@ -44,7 +44,8 @@ class PyMorelInputData():
 
     def set_sets(self):
         """Loads input data into internal dataframes, clean and set the main sets."""
-        # Save the main sets in a dict of lists
+        # Save the main sets in a dict of lists, e.g.
+        # { 'E': ['elec','dhea', 'ngas'], 'A': ['dk0','no0','de0'], }
         self.sets = {
             'E':  self.e['ener'].to_list(),                          # Energy carriers
             'A':  self.a['area'].to_list(),                          # Areas
@@ -56,12 +57,14 @@ class PyMorelInputData():
         # Merge tech role and trading frequency onto te in order to compute subsets of technologies
         tee = pandas.merge(self.te,self.e[['ener','tfrq']], on='ener')
         tee = pandas.merge(tee,self.t, on='tech')
+        # Create ener,area,tech tuple-keys e.g. ('elec','dk0','ccgt') in the dataframe for later use
         tee['key_eat'] = tee[['ener','area','tech']].apply(tuple,axis=1)
 
         # Copy all transmission technologies in order to put the import flows
         # into the TI*_ea subsets.
         # Now, dest becomes the origin area of the export
         dst = tee[tee.role == 'trms']
+        # The dest tuple key use dest instead of area
         dst['key_eat'] = dst[['ener','dest','tech']].apply(tuple,axis=1)
         # Save the main simple subsets in a dict of lists { 'TC': }
         self.subsets = {
@@ -75,35 +78,35 @@ class PyMorelInputData():
             'EH':  self.e['ener'][self.e.tfrq == 'hourly'].to_list(),
             'EW':  self.e['ener'][self.e.tfrq == 'weekly'].to_list(),
             'EY':  self.e['ener'][self.e.tfrq == 'yearly'].to_list(),
-            # Transformation technologies by freq
+            # Transformation technologies by trading frequency
             'TTH': tee['tech'][(tee.role == 'tfrm') & (tee.tfrq == 'hourly')].to_list(),
             'TTW': tee['tech'][(tee.role == 'tfrm') & (tee.tfrq == 'weekly')].to_list(),
             'TTY': tee['tech'][(tee.role == 'tfrm') & (tee.tfrq == 'yearly')].to_list(),
-            # Transmission technologies by freq
+            # Transmission technologies by trading frequency
             'TXH': tee['tech'][(tee.role == 'trms') & (tee.tfrq == 'hourly')].to_list(),
             'TXW': tee['tech'][(tee.role == 'trms') & (tee.tfrq == 'weekly')].to_list(),
             'TXY': tee['tech'][(tee.role == 'trms') & (tee.tfrq == 'yearly')].to_list(),
-            # Storage technologies by freq
+            # Storage technologies by trading frequency
             'TSH': tee['tech'][(tee.role == 'stor') & (tee.tfrq == 'hourly')].to_list(),
             'TSW': tee['tech'][(tee.role == 'stor') & (tee.tfrq == 'weekly')].to_list(),
             'TSY': tee['tech'][(tee.role == 'stor') & (tee.tfrq == 'yearly')].to_list(),
-            # Transformation technologies by freq
+            # Transformation technologies by trading frequency
             'TTH_ea': tee['key_eat'][(tee.role == 'tfrm') & (tee.tfrq == 'hourly')].to_list(),
             'TTW_ea': tee['key_eat'][(tee.role == 'tfrm') & (tee.tfrq == 'weekly')].to_list(),
             'TTY_ea': tee['key_eat'][(tee.role == 'tfrm') & (tee.tfrq == 'yearly')].to_list(),
-            # Transmission technologies by freq - exporting areas
+            # Transmission technologies by trading frequency - exporting areas
             'TXH_ea': tee['key_eat'][(tee.role == 'trms') & (tee.tfrq == 'hourly')].to_list(),
             'TXW_ea': tee['key_eat'][(tee.role == 'trms') & (tee.tfrq == 'weekly')].to_list(),
             'TXY_ea': tee['key_eat'][(tee.role == 'trms') & (tee.tfrq == 'yearly')].to_list(),
-            # Transmission technologies by freq - exporting areas
+            # Transmission technologies by trading frequency- exporting areas
             'TIH_ea': dst['key_eat'][(dst.role == 'trms') & (tee.tfrq == 'hourly')].to_list(),
             'TIW_ea': dst['key_eat'][(dst.role == 'trms') & (tee.tfrq == 'weekly')].to_list(),
             'TIY_ea': dst['key_eat'][(dst.role == 'trms') & (tee.tfrq == 'yearly')].to_list(),
-            # Storage technologies by freq
+            # Storage technologies by trading frequency
             'TSH_ea': tee['key_eat'][(tee.role == 'stor') & (tee.tfrq == 'hourly')].to_list(),
             'TSW_ea': tee['key_eat'][(tee.role == 'stor') & (tee.tfrq == 'weekly')].to_list(),
             'TSY_ea': tee['key_eat'][(tee.role == 'stor') & (tee.tfrq == 'yearly')].to_list(),
-            # All (ener,area,tech) combos
+            # All (ener,area,tech) tuple-key combos
             'EAT': tee['key_eat'].to_list() + dst['key_eat'].to_list()
         }
 
@@ -181,6 +184,3 @@ class PyMorelInputData():
             'max_C': dict(zip(ty.key,ty.maxC)),         # Maximum capacity of all technologies
             'cst_C': dict(zip(ty.key,ty.cstC)),         # Cost of capacity of all technologies
         }
-
-
-
