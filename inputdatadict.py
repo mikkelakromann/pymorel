@@ -3,18 +3,18 @@ class InputDataDict():
     def __init__(self) -> dict:
         """Provide a default dataset."""
         self.data = {}
-        # Area database
-        self.data['a_data'] = {
-            'area': ['dk0',     'de0',      'no0',      ],
+        # Region database
+        self.data['r_data'] = {
+            'regn': ['dk0',     'de0',      'no0',      ],
         }
         # Energy carrier database
         self.data['e_data'] = {
             'ener': ['elec',    'dhea',     'ngas'      ],
             'tfrq': ['hourly',  'hourly',   'yearly'    ],
         }
-        self.data['ea_data'] = {
+        self.data['er_data'] = {
             'ener': ['elec',    'elec',    'elec',    'dhea',    'dhea',    'dhea',    ],
-            'area': ['dk0',     'de0',     'no0',     'dk0',     'de0',     'no0',     ],
+            'regn': ['dk0',     'de0',     'no0',     'dk0',     'de0',     'no0',     ],
             'lFin': [40.00,     400.0,     40.00,     0.00,      0.0,       0.00,     ],
             'vFin': ['varElec', 'varElec', 'varElec', 'varDHea', 'varDHea', 'varDHea', ],
         }
@@ -24,8 +24,8 @@ class InputDataDict():
             'asst': ['bpgt_dk0','bpgt_de0','bpgt_no0','wind_dk0','wind_de0','wind_no0','sopv_dk0','sopv_de0','sopv_no0',],
             # Role: tfrm: transformation, tmis: transmission, stor: storage
             'role': ['tfrm',    'tfrm',    'tfrm',    'tfrm',    'tfrm',    'tfrm',    'tfrm',    'tfrm',    'tfrm',    ],
-            # Area of location
-            'area': ['dk0',     'de0',     'no0',     'dk0',     'de0',     'no0',     'dk0',     'de0',     'no0',     ],
+            # Region of location
+            'regn': ['dk0',     'de0',     'no0',     'dk0',     'de0',     'no0',     'dk0',     'de0',     'no0',     ],
             # Destination of transmission if applicable
             'dest': ['',        '',        '',        '',        '',        '',        '',        '',        '',        ],
             # Availability

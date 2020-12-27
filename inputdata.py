@@ -31,15 +31,15 @@ class PyMorelInputData():
         self.w = pandas.DataFrame(self.inputdata['w_data'])         # Weekly data
         self.wh = pandas.DataFrame(self.inputdata['wh_data'])       # Weekly x hourly data
 
-        self.a = pandas.DataFrame(self.inputdata['a_data'])         # Area data
+        self.r = pandas.DataFrame(self.inputdata['r_data'])         # Region data
         self.e = pandas.DataFrame(self.inputdata['e_data'])         # Energy carrier data
-        self.ea = pandas.DataFrame(self.inputdata['ea_data'])       # Energy carrier x area data
+        self.er = pandas.DataFrame(self.inputdata['er_data'])       # Energy carrier x region data
 
         # Clean out assets that are not relevant to the year or have zero endo & exo capacity limit
         self.ty[(self.ty.year == 'y2020') & ((self.ty.iniC > 0) | (self.ty.maxC > 0))]
         self.t = pandas.merge(self.t,self.ty['asst'], on='asst')    # merge will drop t rows that have no tech in ty
         self.te = pandas.merge(self.te,self.ty['asst'], on='asst')  # merge will drop te rows that have no tech in ty
-        # TODO: Clean t for areas not in a
+        # TODO: Clean t for regions not in a
         # TODO: Clean te for eners not in e
 
     def set_sets(self):
@@ -48,7 +48,7 @@ class PyMorelInputData():
         # { 'E': ['elec','dhea', 'ngas'], 'A': ['dk0','no0','de0'], }
         self.sets = {
             'E':  self.e['ener'].to_list(),                          # Energy carriers
-            'A':  self.a['area'].to_list(),                          # Areas
+            'R':  self.r['regn'].to_list(),                          # Regions
             'T':  self.t['asst'].to_list(),                          # All active assets
             'W':  self.w['week'].to_list(),                          # Weeks
             'H':  self.h['hour'].to_list(),                          # Hours
@@ -57,15 +57,15 @@ class PyMorelInputData():
         # Merge tech role and trading frequency onto te in order to compute subsets of assets
         tee = pandas.merge(self.te,self.e[['ener','tfrq']], on='ener')
         tee = pandas.merge(tee,self.t, on='asst')
-        # Create ener,area,tech tuple-keys e.g. ('elec','dk0','ccgt') in the dataframe for later use
-        tee['key_eat'] = tee[['ener','area','asst']].apply(tuple,axis=1)
+        # Create ener,region,tech tuple-keys e.g. ('elec','dk0','ccgt') in the dataframe for later use
+        tee['key_ert'] = tee[['ener','regn','asst']].apply(tuple,axis=1)
 
         # Copy all transmission assets in order to put the import flows
         # into the TI*_ea subsets.
-        # Now, dest becomes the origin area of the export
+        # Now, dest becomes the origin region of the export
         dst = tee[tee.role == 'trms']
-        # The dest tuple key use dest instead of area
-        dst['key_eat'] = dst[['ener','dest','asst']].apply(tuple,axis=1)
+        # The dest tuple key use dest instead of region
+        dst['key_ert'] = dst[['ener','dest','asst']].apply(tuple,axis=1)
         # Save the main simple subsets in a dict of lists { 'TC': }
         self.subsets = {
             # Technologies that can be invested in
@@ -91,23 +91,23 @@ class PyMorelInputData():
             'TSW': tee['asst'][(tee.role == 'stor') & (tee.tfrq == 'weekly')].to_list(),
             'TSY': tee['asst'][(tee.role == 'stor') & (tee.tfrq == 'yearly')].to_list(),
             # Transformation assets by trading frequency
-            'TTH_ea': tee['key_eat'][(tee.role == 'tfrm') & (tee.tfrq == 'hourly')].to_list(),
-            'TTW_ea': tee['key_eat'][(tee.role == 'tfrm') & (tee.tfrq == 'weekly')].to_list(),
-            'TTY_ea': tee['key_eat'][(tee.role == 'tfrm') & (tee.tfrq == 'yearly')].to_list(),
-            # Transmission assets by trading frequency - exporting areas
-            'TXH_ea': tee['key_eat'][(tee.role == 'trms') & (tee.tfrq == 'hourly')].to_list(),
-            'TXW_ea': tee['key_eat'][(tee.role == 'trms') & (tee.tfrq == 'weekly')].to_list(),
-            'TXY_ea': tee['key_eat'][(tee.role == 'trms') & (tee.tfrq == 'yearly')].to_list(),
-            # Transmission assets by trading frequency- exporting areas
-            'TIH_ea': dst['key_eat'][(dst.role == 'trms') & (tee.tfrq == 'hourly')].to_list(),
-            'TIW_ea': dst['key_eat'][(dst.role == 'trms') & (tee.tfrq == 'weekly')].to_list(),
-            'TIY_ea': dst['key_eat'][(dst.role == 'trms') & (tee.tfrq == 'yearly')].to_list(),
+            'TTH_er': tee['key_ert'][(tee.role == 'tfrm') & (tee.tfrq == 'hourly')].to_list(),
+            'TTW_er': tee['key_ert'][(tee.role == 'tfrm') & (tee.tfrq == 'weekly')].to_list(),
+            'TTY_er': tee['key_ert'][(tee.role == 'tfrm') & (tee.tfrq == 'yearly')].to_list(),
+            # Transmission assets by trading frequency - exporting regions
+            'TXH_er': tee['key_ert'][(tee.role == 'trms') & (tee.tfrq == 'hourly')].to_list(),
+            'TXW_er': tee['key_ert'][(tee.role == 'trms') & (tee.tfrq == 'weekly')].to_list(),
+            'TXY_er': tee['key_ert'][(tee.role == 'trms') & (tee.tfrq == 'yearly')].to_list(),
+            # Transmission assets by trading frequency- exporting regions
+            'TIH_er': dst['key_ert'][(dst.role == 'trms') & (tee.tfrq == 'hourly')].to_list(),
+            'TIW_er': dst['key_ert'][(dst.role == 'trms') & (tee.tfrq == 'weekly')].to_list(),
+            'TIY_er': dst['key_ert'][(dst.role == 'trms') & (tee.tfrq == 'yearly')].to_list(),
             # Storage assets by trading frequency
-            'TSH_ea': tee['key_eat'][(tee.role == 'stor') & (tee.tfrq == 'hourly')].to_list(),
-            'TSW_ea': tee['key_eat'][(tee.role == 'stor') & (tee.tfrq == 'weekly')].to_list(),
-            'TSY_ea': tee['key_eat'][(tee.role == 'stor') & (tee.tfrq == 'yearly')].to_list(),
-            # All (ener,area,tech) tuple-key combos
-            'EAT': tee['key_eat'].to_list() + dst['key_eat'].to_list()
+            'TSH_er': tee['key_ert'][(tee.role == 'stor') & (tee.tfrq == 'hourly')].to_list(),
+            'TSW_er': tee['key_ert'][(tee.role == 'stor') & (tee.tfrq == 'weekly')].to_list(),
+            'TSY_er': tee['key_ert'][(tee.role == 'stor') & (tee.tfrq == 'yearly')].to_list(),
+            # All (ener,region,tech) tuple-key combos
+            'ERT': tee['key_ert'].to_list() + dst['key_ert'].to_list()
         }
 
     def set_para_hourly(self):
@@ -138,9 +138,9 @@ class PyMorelInputData():
 
         # Final consumption - mFin is the multiplier from the selected column lFin
         wh.columns = ['week','hour','vFin','mFin']
-        fwh = pandas.merge(self.ea[['ener','area','vFin','lFin']], wh, on='vFin')
+        fwh = pandas.merge(self.er[['ener','regn','vFin','lFin']], wh, on='vFin')
         fwh['fin'] = fwh.lFin*fwh.mFin
-        fwh['key'] = fwh[['ener','area','week','hour']].apply(tuple,axis=1)
+        fwh['key'] = fwh[['ener','regn','week','hour']].apply(tuple,axis=1)
 
         # Declare hourly parameters with dict keys (tth,w,h)
         self.para_h = {
@@ -153,7 +153,7 @@ class PyMorelInputData():
             'ava_Sh': dict(zip(twh_s.key,twh_s.ava)),   # Hourly availability of storage at storage asset
             'ava_Dh': dict(zip(twh_s.key,twh_s.ava)),   # Hourly availability of discharge at storage asset
             'ava_Vh': dict(zip(twh_s.key,twh_s.ava)),   # Hourly availability of volume at storage asset
-            'fin_h': dict(zip(fwh.key,fwh.fin)),        # Hourly final consumption by ener, area, week and hour
+            'fin_h': dict(zip(fwh.key,fwh.fin)),        # Hourly final consumption by ener, region, week and hour
         }
 
     def set_para_yearly(self):

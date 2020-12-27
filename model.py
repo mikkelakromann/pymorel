@@ -48,7 +48,7 @@ class PyMorelModel():
         # Single letter upper case indicate set (or variable, see variables section)
         sets = self.data.sets           # Alias with local scope
         E = m.E = get_set(sets['E'])    # Energy carrier set
-        A = m.A = get_set(sets['A'])    # Areas set
+        R = m.R = get_set(sets['R'])    # Regions set
         T = m.T = get_set(sets['T'])    # Technologies set
         W = m.W = get_set(sets['W'])    # Weeks (tfrq) set
         H = m.H = get_set(sets['H'])    # Hours (tfrq) set
@@ -77,20 +77,20 @@ class PyMorelModel():
         TSW = m.TSW = get_subset(subsets['TSW'],TS)     # Technologies for (S)torage (W)eekly
         TSY = m.TSY = get_subset(subsets['TSY'],TS)     # Technologies for (S)torage (Y)early
 
-        # asst/tfrq subsets conditional on ener/area - store cond. subsets in a dict
-        EAT = subsets['EAT']
-        m.TTH_ea = get_subset(subsets['TTH_ea'],EAT)  # Transformation hourly assets
-        m.TXH_ea = get_subset(subsets['TXH_ea'],EAT)  # Export hourly assets
-        m.TIH_ea = get_subset(subsets['TIH_ea'],EAT)  # Import hourly assets
-        m.TSH_ea = get_subset(subsets['TSH_ea'],EAT)  # Storage hourly assets
-        m.TTW_ea = get_subset(subsets['TTW_ea'],EAT)  # Transformation weekly assets
-        m.TXW_ea = get_subset(subsets['TXW_ea'],EAT)  # Export weekly assets
-        m.TIW_ea = get_subset(subsets['TIW_ea'],EAT)  # Import weekly assets
-        m.TSW_ea = get_subset(subsets['TSW_ea'],EAT)  # Storage weekly assets
-        m.TTY_ea = get_subset(subsets['TTY_ea'],EAT)  # Transformation yearly assets
-        m.TXY_ea = get_subset(subsets['TXY_ea'],EAT)  # Transmission yearly assets
-        m.TIY_ea = get_subset(subsets['TIY_ea'],EAT)  # Transmission yearly assets
-        m.TSY_ea = get_subset(subsets['TSY_ea'],EAT)  # Storage yearly assets
+        # asst/tfrq subsets conditional on ener/region - store cond. subsets in a dict
+        ERT = subsets['ERT']
+        m.TTH_er = get_subset(subsets['TTH_er'],ERT)  # Transformation hourly assets
+        m.TXH_er = get_subset(subsets['TXH_er'],ERT)  # Export hourly assets
+        m.TIH_er = get_subset(subsets['TIH_er'],ERT)  # Import hourly assets
+        m.TSH_er = get_subset(subsets['TSH_er'],ERT)  # Storage hourly assets
+        m.TTW_er = get_subset(subsets['TTW_er'],ERT)  # Transformation weekly assets
+        m.TXW_er = get_subset(subsets['TXW_er'],ERT)  # Export weekly assets
+        m.TIW_er = get_subset(subsets['TIW_er'],ERT)  # Import weekly assets
+        m.TSW_er = get_subset(subsets['TSW_er'],ERT)  # Storage weekly assets
+        m.TTY_er = get_subset(subsets['TTY_er'],ERT)  # Transformation yearly assets
+        m.TXY_er = get_subset(subsets['TXY_er'],ERT)  # Transmission yearly assets
+        m.TIY_er = get_subset(subsets['TIY_er'],ERT)  # Transmission yearly assets
+        m.TSY_er = get_subset(subsets['TSY_er'],ERT)  # Storage yearly assets
 
         ###############################################################################################################
         # Variable declaration and assignment
@@ -101,8 +101,8 @@ class PyMorelModel():
 
         # Hourly transformation, storage and transmission assets
         m.Th = Var(TTH,W,H, within=NonNegativeReals)    # Energy input effect into transformation
-        m.Xh = Var(TXH,W,H, within=NonNegativeReals)    # Transmission effect from 1st to 2nd area
-        m.Ih = Var(TXH,W,H, within=NonNegativeReals)    # Transmission effect from 2nd to 1st area
+        m.Xh = Var(TXH,W,H, within=NonNegativeReals)    # Transmission effect from 1st to 2nd region
+        m.Ih = Var(TXH,W,H, within=NonNegativeReals)    # Transmission effect from 2nd to 1st region
         m.Sh = Var(TSH,W,H, within=NonNegativeReals)    # Storage input effect into storage
         m.Dh = Var(TSH,W,H, within=NonNegativeReals)    # Discharge output effect from storage
         m.Vh = Var(TSH,W,H, within=NonNegativeReals)    # Stored volume of energy
@@ -112,8 +112,8 @@ class PyMorelModel():
         #m.SSw = Var(tsw,w, within=NonNegativeReals)    # Storage input effect into storage
         #m.SDw = Var(tsw,w, within=NonNegativeReals)    # Discharge output effect from storage
         #m.SVw = Var(tsw,w, within=NonNegativeReals)    # Stored volume of energy by week
-        #m.X1w = Var(txw,w, within=NonNegativeReals)    # Transmission effect from 1st to 2nd area
-        #m.X2w = Var(txw,w, within=NonNegativeReals)    # Transmission effect from 2nd to 1st area
+        #m.X1w = Var(txw,w, within=NonNegativeReals)    # Transmission effect from 1st to 2nd region
+        #m.X2w = Var(txw,w, within=NonNegativeReals)    # Transmission effect from 2nd to 1st region
 
         ###############################################################################################################
         # Parameter declaration and assignment
@@ -134,7 +134,7 @@ class PyMorelModel():
         m.ava_Dh = Param(TSH,W,H, initialize=para_h['ava_Dh'], default=0)   # Hourly availability of discharge
         m.ava_Vh = Param(TSH,W,H, initialize=para_h['ava_Vh'], default=0)   # Hourly availability of storage volume
 
-        m.fin_h = Param(E,A,W,H, initialize=para_h['fin_h'], default=0)     # Hourly demand for energy carrier by area
+        m.fin_h = Param(E,R,W,H, initialize=para_h['fin_h'], default=0)     # Hourly demand for energy carrier by region
 
         # Parameters that are fixed across the year, to be multiplied or constraining any variable
         m.eff = Param(E,T, initialize=para_y['eff'], default=0)             # Conversion efficiency ratio output/input
@@ -156,7 +156,7 @@ class PyMorelModel():
         # Objective
         m.obj = Objective(rule=self.rule_objective)
         # Constraints: Capital Q indicates constraint, R indicates rule
-        m.Q_equilibrium_h = Constraint(EH,A,W,H, rule=self.rule_equilibrium_h)
+        m.Q_equilibrium_h = Constraint(EH,R,W,H, rule=self.rule_equilibrium_h)
 
     ###################################################################################################################
     #
@@ -182,39 +182,39 @@ class PyMorelModel():
 
     ###################################################################################################################
     #
-    #   MARKET EQUILIBRIUM FOR AREAS RULE DEFINITION
-    #   Market equilibrium for energy carriers, areas, weeks and hours
-    #   ie one equation per energy carrier, area and trading frequency
+    #   MARKET EQUILIBRIUM FOR REGIONS RULE DEFINITION
+    #   Market equilibrium for energy carriers, regions, weeks and hours
+    #   ie one equation per energy carrier, region and trading frequency
     #
     ###################################################################################################################
 
     # Trading and exchange is on an energy carrier basis
-    def rule_equilibrium_h(self,m,e,a,w,h) -> dict:
+    def rule_equilibrium_h(self,m,e,r,w,h) -> dict:
         """Constraint to ensure equilibrium for hourly traded energy carriers."""
 
         # Transformation between energy carriers: eff>0 is output, eff<0 is input
         # For heat pumps, eff needs to be modified to depend on hour and week
-        # TTH_ea is a list of (ener,area,asst) hour transformation assets
-        # (e,a) is under control already, so summing will yield the assts
-        tra = sum(m.Th[tth,w,h]*m.eff[e,tth] for tth in m.TTH if (e,a,tth) in m.TTH_ea)
+        # TTH_ea is a list of (ener,region,asst) hour transformation assets
+        # (e,r) is under control already, so summing will yield the assts
+        tra = sum(m.Th[tth,w,h]*m.eff[e,tth] for tth in m.TTH if (e,r,tth) in m.TTH_er)
 
-        # Gross import from area a - transmission assets are directional
-        # I is import into the owner area
-        # X is export from another owner area turned into import to this destination area
-        imp = sum(m.Ih[txh,w,h]*m.eff[e,txh] for txh in m.TXH if (e,a,txh) in m.TXH_ea)\
-             +sum(m.Xh[tih,w,h]*m.eff[e,tih] for tih in m.TXH if (e,a,tih) in m.TIH_ea)
+        # Gross import from region a - transmission assets are directional
+        # I is import into the owner region
+        # X is export from another owner region turned into import to this destination region
+        imp = sum(m.Ih[txh,w,h]*m.eff[e,txh] for txh in m.TXH if (e,r,txh) in m.TXH_er)\
+             +sum(m.Xh[tih,w,h]*m.eff[e,tih] for tih in m.TXH if (e,r,tih) in m.TIH_er)
 
-        # Gross export from area a - transmission assets are directional
+        # Gross export from region a - transmission assets are directional
         # so export for the owner is import to the receiver
-        exp = sum(m.Xh[txh,w,h] for txh in m.TXH if (e,a,txh) in m.TXH_ea)\
-             +sum(m.Ih[tih,w,h] for tih in m.TXH if (e,a,tih) in m.TIH_ea)
+        exp = sum(m.Xh[txh,w,h] for txh in m.TXH if (e,r,txh) in m.TXH_er)\
+             +sum(m.Ih[tih,w,h] for tih in m.TXH if (e,r,tih) in m.TIH_er)
 
         # Storage and discharge
-        sto = sum(m.Sh[tsh,w,h] for tsh in m.TSH if (e,a,tsh) in m.TSH_ea)
-        dis = sum(m.Dh[tsh,w,h] for tsh in m.TSH if (e,a,tsh) in m.TSH_ea)
+        sto = sum(m.Sh[tsh,w,h] for tsh in m.TSH if (e,r,tsh) in m.TSH_er)
+        dis = sum(m.Dh[tsh,w,h] for tsh in m.TSH if (e,r,tsh) in m.TSH_er)
 
         # Final consumption (gross)
-        fin = m.fin_h[e,a,w,h]
+        fin = m.fin_h[e,r,w,h]
 
         # Return equilibrium constraint rule
         return tra + dis + imp == fin + sto + exp
@@ -223,7 +223,7 @@ class PyMorelModel():
     #
     #   STORAGE RELATIONS: INTERTEMPORAL AND OTHERS RULE DEFINITIONS
     #   Storage is on a asset basis, i.e. one equation per asset and trading frequency step
-    #   Note: each asset is always connected to exactly one area
+    #   Note: each asset is always connected to exactly one region
     #
     ###################################################################################################################
 
@@ -278,7 +278,7 @@ class PyMorelModel():
 
     def report(self):
         self.model.TTH.pprint()
-        self.model.TTH_ea.pprint()
+        self.model.TTH_er.pprint()
         self.model.Q_equilibrium_h.pprint()
         print(self.results)
 
