@@ -49,7 +49,7 @@ class PyMorelModel():
         sets = self.data.sets           # Alias with local scope
         E = m.E = get_set(sets['E'])    # Energy carrier set
         R = m.R = get_set(sets['R'])    # Regions set
-        T = m.T = get_set(sets['T'])    # Technologies set
+        A = m.A = get_set(sets['A'])    # Assets set
         W = m.W = get_set(sets['W'])    # Weeks (tfrq) set
         H = m.H = get_set(sets['H'])    # Hours (tfrq) set
 
@@ -62,50 +62,50 @@ class PyMorelModel():
 
         # Tech subsets are distinguished by second letter referring to asset role (T,S,X) or capacity (C)
         # Note: TT, TX and TS are true, mutually exclusive subsets
-        TT = m.TT = get_subset(subsets['TT'], T)        # Technologies for (T)ransformation
-        TX = m.TX = get_subset(subsets['TX'], T)        # Technologies for e(X)change
-        TS = m.TS = get_subset(subsets['TS'], T)        # Technologies for (S)torage
-        TC = m.TC = get_subset(subsets['TC'], T)        # Technologies with (C)apacity investment
+        AT = m.AT = get_subset(subsets['AT'], A)        # Assets for (T)ransformation
+        AX = m.AX = get_subset(subsets['AX'], A)        # Assets for e(X)change
+        AS = m.AS = get_subset(subsets['AS'], A)        # Assets for (S)torage
+        AC = m.AC = get_subset(subsets['AC'], A)        # Assets with (C)apacity investment
 
-        TTH = m.TTH = get_subset(subsets['TTH'],TT)     # Technologies for (T)ransformation (H)ourly
-        TTW = m.TTW = get_subset(subsets['TTW'],TT)     # Technologies for (T)ransformation (W)eekly
-        TTY = m.TTY = get_subset(subsets['TTY'],TT)     # Technologies for (T)ransformation (Y)early
-        TXH = m.TXH = get_subset(subsets['TXH'],TX)     # Technologies for (X)transmission (H)ourly
-        TXW = m.TXW = get_subset(subsets['TXW'],TX)     # Technologies for (X)transmission (W)eekly
-        TXY = m.TXY = get_subset(subsets['TXY'],TX)     # Technologies for (X)transmission (Y)early
-        TSH = m.TSH = get_subset(subsets['TSH'],TS)     # Technologies for (S)torage (H)ourly
-        TSW = m.TSW = get_subset(subsets['TSW'],TS)     # Technologies for (S)torage (W)eekly
-        TSY = m.TSY = get_subset(subsets['TSY'],TS)     # Technologies for (S)torage (Y)early
+        ATH = m.ATH = get_subset(subsets['ATH'],AT)     # Assets for (T)ransformation (H)ourly
+        ATW = m.ATW = get_subset(subsets['ATW'],AT)     # Assets for (T)ransformation (W)eekly
+        ATY = m.ATY = get_subset(subsets['ATY'],AT)     # Assets for (T)ransformation (Y)early
+        AXH = m.AXH = get_subset(subsets['AXH'],AX)     # Assets for (X)transmission (H)ourly
+        AXW = m.AXW = get_subset(subsets['AXW'],AX)     # Assets for (X)transmission (W)eekly
+        AXY = m.AXY = get_subset(subsets['AXY'],AX)     # Assets for (X)transmission (Y)early
+        ASH = m.ASH = get_subset(subsets['ASH'],AS)     # Assets for (S)torage (H)ourly
+        ASW = m.ASW = get_subset(subsets['ASW'],AS)     # Assets for (S)torage (W)eekly
+        ASY = m.ASY = get_subset(subsets['ASY'],AS)     # Assets for (S)torage (Y)early
 
         # asst/tfrq subsets conditional on ener/region - store cond. subsets in a dict
-        ERT = subsets['ERT']
-        m.TTH_er = get_subset(subsets['TTH_er'],ERT)  # Transformation hourly assets
-        m.TXH_er = get_subset(subsets['TXH_er'],ERT)  # Export hourly assets
-        m.TIH_er = get_subset(subsets['TIH_er'],ERT)  # Import hourly assets
-        m.TSH_er = get_subset(subsets['TSH_er'],ERT)  # Storage hourly assets
-        m.TTW_er = get_subset(subsets['TTW_er'],ERT)  # Transformation weekly assets
-        m.TXW_er = get_subset(subsets['TXW_er'],ERT)  # Export weekly assets
-        m.TIW_er = get_subset(subsets['TIW_er'],ERT)  # Import weekly assets
-        m.TSW_er = get_subset(subsets['TSW_er'],ERT)  # Storage weekly assets
-        m.TTY_er = get_subset(subsets['TTY_er'],ERT)  # Transformation yearly assets
-        m.TXY_er = get_subset(subsets['TXY_er'],ERT)  # Transmission yearly assets
-        m.TIY_er = get_subset(subsets['TIY_er'],ERT)  # Transmission yearly assets
-        m.TSY_er = get_subset(subsets['TSY_er'],ERT)  # Storage yearly assets
+        ERA = subsets['ERA']
+        m.ATH_er = get_subset(subsets['ATH_er'],ERA)  # Transformation hourly assets
+        m.AXH_er = get_subset(subsets['AXH_er'],ERA)  # Export hourly assets
+        m.AIH_er = get_subset(subsets['AIH_er'],ERA)  # Import hourly assets
+        m.ASH_er = get_subset(subsets['ASH_er'],ERA)  # Storage hourly assets
+        m.ATW_er = get_subset(subsets['ATW_er'],ERA)  # Transformation weekly assets
+        m.AXW_er = get_subset(subsets['AXW_er'],ERA)  # Export weekly assets
+        m.AIW_er = get_subset(subsets['AIW_er'],ERA)  # Import weekly assets
+        m.ASW_er = get_subset(subsets['ASW_er'],ERA)  # Storage weekly assets
+        m.ATY_er = get_subset(subsets['ATY_er'],ERA)  # Transformation yearly assets
+        m.AXY_er = get_subset(subsets['AXY_er'],ERA)  # Transmission yearly assets
+        m.AIY_er = get_subset(subsets['AIY_er'],ERA)  # Transmission yearly assets
+        m.ASY_er = get_subset(subsets['ASY_er'],ERA)  # Storage yearly assets
 
         ###############################################################################################################
         # Variable declaration and assignment
         ###############################################################################################################
 
-        # Technology capacity additions are annual
-        m.C = Var(TC, within=NonNegativeReals)          # Capacity addition for all endognenous investment assets
+        # Asset capacity additions are annual
+        m.C = Var(AC, within=NonNegativeReals)          # Capacity addition for all endognenous investment assets
 
         # Hourly transformation, storage and transmission assets
-        m.Th = Var(TTH,W,H, within=NonNegativeReals)    # Energy input effect into transformation
-        m.Xh = Var(TXH,W,H, within=NonNegativeReals)    # Transmission effect from 1st to 2nd region
-        m.Ih = Var(TXH,W,H, within=NonNegativeReals)    # Transmission effect from 2nd to 1st region
-        m.Sh = Var(TSH,W,H, within=NonNegativeReals)    # Storage input effect into storage
-        m.Dh = Var(TSH,W,H, within=NonNegativeReals)    # Discharge output effect from storage
-        m.Vh = Var(TSH,W,H, within=NonNegativeReals)    # Stored volume of energy
+        m.Th = Var(ATH,W,H, within=NonNegativeReals)    # Energy input effect into transformation
+        m.Xh = Var(AXH,W,H, within=NonNegativeReals)    # Transmission effect from 1st to 2nd region
+        m.Ih = Var(AXH,W,H, within=NonNegativeReals)    # Transmission effect from 2nd to 1st region
+        m.Sh = Var(ASH,W,H, within=NonNegativeReals)    # Storage input effect into storage
+        m.Dh = Var(ASH,W,H, within=NonNegativeReals)    # Discharge output effect from storage
+        m.Vh = Var(ASH,W,H, within=NonNegativeReals)    # Stored volume of energy
 
         # Weekly transformation, storage and transmission assets
         #m.TIw = Var(ttw,w, within=NonNegativeReals)    # Energy input effect into transformation
@@ -123,31 +123,31 @@ class PyMorelModel():
         para_y = self.data.para_y   # Pointer for yearly parameter data structure (dict of dicts)
 
         # Parameters potentially varying hourly to be multiplied to or constraining hourly variables
-        m.cst_Th = Param(TTH,W,H, initialize=para_h['cst_Th'], default=0)   # Unit variable cost of transformation
-        m.cst_Sh = Param(TSH,W,H, initialize=para_h['cst_Sh'], default=0)   # Unit variable cost of storage
-        m.cst_Xh = Param(TXH,W,H, initialize=para_h['cst_Xh'], default=0)   # Unit variable cost of transmission
+        m.cst_Th = Param(ATH,W,H, initialize=para_h['cst_Th'], default=0)   # Unit variable cost of transformation
+        m.cst_Sh = Param(ASH,W,H, initialize=para_h['cst_Sh'], default=0)   # Unit variable cost of storage
+        m.cst_Xh = Param(AXH,W,H, initialize=para_h['cst_Xh'], default=0)   # Unit variable cost of transmission
 
-        m.ava_Th = Param(TTH,W,H, initialize=para_h['ava_Th'], default=0)   # Hourly availability of transformation
-        m.ava_Xh = Param(TXH,W,H, initialize=para_h['ava_Xh'], default=0)   # Hourly availability of export
-        m.ava_Ih = Param(TXH,W,H, initialize=para_h['ava_Ih'], default=0)   # Hourly availability of import
-        m.ava_Sh = Param(TSH,W,H, initialize=para_h['ava_Sh'], default=0)   # Hourly availability of storage
-        m.ava_Dh = Param(TSH,W,H, initialize=para_h['ava_Dh'], default=0)   # Hourly availability of discharge
-        m.ava_Vh = Param(TSH,W,H, initialize=para_h['ava_Vh'], default=0)   # Hourly availability of storage volume
+        m.ava_Th = Param(ATH,W,H, initialize=para_h['ava_Th'], default=0)   # Hourly availability of transformation
+        m.ava_Xh = Param(AXH,W,H, initialize=para_h['ava_Xh'], default=0)   # Hourly availability of export
+        m.ava_Ih = Param(AXH,W,H, initialize=para_h['ava_Ih'], default=0)   # Hourly availability of import
+        m.ava_Sh = Param(ASH,W,H, initialize=para_h['ava_Sh'], default=0)   # Hourly availability of storage
+        m.ava_Dh = Param(ASH,W,H, initialize=para_h['ava_Dh'], default=0)   # Hourly availability of discharge
+        m.ava_Vh = Param(ASH,W,H, initialize=para_h['ava_Vh'], default=0)   # Hourly availability of storage volume
 
         m.fin_h = Param(E,R,W,H, initialize=para_h['fin_h'], default=0)     # Hourly demand for energy carrier by region
 
         # Parameters that are fixed across the year, to be multiplied or constraining any variable
-        m.eff = Param(E,T, initialize=para_y['eff'], default=0)             # Conversion efficiency ratio output/input
-        m.ini_T = Param(TT, initialize=para_y['ini_T'], default=0)          # Initial capacity of transformation asst.
+        m.eff = Param(E,A, initialize=para_y['eff'], default=0)             # Conversion efficiency ratio output/input
+        m.ini_T = Param(AT, initialize=para_y['ini_T'], default=0)          # Initial capacity of transformation asst.
         print(para_y['ini_X'])
 
-        m.ini_X = self.get_para([TX], para_y['ini_X'])                      # Initial capacity of export asset
-        m.ini_I = Param(TX, initialize=para_y['ini_I'], default=0)          # Initial capacity of import asset
-        m.ini_S = Param(TS, initialize=para_y['ini_S'], default=0)          # Initial capacity of storage asset
-        m.ini_D = Param(TS, initialize=para_y['ini_D'], default=0)          # Initial capacity of discharge asset
-        m.ini_V = Param(TS, initialize=para_y['ini_V'], default=0)          # Initial capacity of volume asset
-        m.max_C = Param(T, initialize=para_y['max_C'], default=0)           # Maximum capacity of any asset
-        m.cst_C = Param(T, initialize=para_y['cst_C'], default=0)           # Unit capital cost of asset
+        m.ini_X = self.get_para([AX], para_y['ini_X'])                      # Initial capacity of export asset
+        m.ini_I = Param(AX, initialize=para_y['ini_I'], default=0)          # Initial capacity of import asset
+        m.ini_S = Param(AS, initialize=para_y['ini_S'], default=0)          # Initial capacity of storage asset
+        m.ini_D = Param(AS, initialize=para_y['ini_D'], default=0)          # Initial capacity of discharge asset
+        m.ini_V = Param(AS, initialize=para_y['ini_V'], default=0)          # Initial capacity of volume asset
+        m.max_C = Param(A, initialize=para_y['max_C'], default=0)           # Maximum capacity of any asset
+        m.cst_C = Param(A, initialize=para_y['cst_C'], default=0)           # Unit capital cost of asset
 
         ###############################################################################################################
         # Objective and constraints declaration and assignment
@@ -167,15 +167,15 @@ class PyMorelModel():
     def rule_objective(self,m):
         """Total cost is discouted capex, fopex and vopex."""
         # Capital costs (CAPEX) is tied to ...
-        cst_capex = sum(m.C[t]*m.cst_C[t] for t in m.T)
+        cst_capex = sum(m.C[a]*m.cst_C[a] for a in m.A)
         # Fixed operations costs (FOPEX) is tied ...
         cst_fopex = 0
         # Variable operating costs is ...
         cst_vopex = 0
         # Fuel costs are tied to input to generation, only exogenous fuel costs
         # TODO: Multiply with weights for weeks x hours
-        cst_fuels_h = sum(m.Th[tth,w,h]*m.cst_Th[tth,w,h] for tth in m.TTH for w in m.W for h in m.H)
-        cst_store_h = sum(m.Sh[tsh,w,h]*m.cst_Sh[tsh,w,h] for tsh in m.TSH for w in m.W for h in m.H)
+        cst_fuels_h = sum(m.Th[ath,w,h]*m.cst_Th[ath,w,h] for ath in m.ATH for w in m.W for h in m.H)
+        cst_store_h = sum(m.Sh[ash,w,h]*m.cst_Sh[ash,w,h] for ash in m.ASH for w in m.W for h in m.H)
         # Total costs is sum of CAPEX, Fixed OPEX, variable OPEX and fuel costs
         cst_total = cst_capex + cst_fopex + cst_vopex + cst_fuels_h + cst_store_h
         return cst_total
@@ -196,22 +196,22 @@ class PyMorelModel():
         # For heat pumps, eff needs to be modified to depend on hour and week
         # TTH_ea is a list of (ener,region,asst) hour transformation assets
         # (e,r) is under control already, so summing will yield the assts
-        tra = sum(m.Th[tth,w,h]*m.eff[e,tth] for tth in m.TTH if (e,r,tth) in m.TTH_er)
+        tra = sum(m.Th[ath,w,h]*m.eff[e,ath] for ath in m.ATH if (e,r,ath) in m.ATH_er)
 
         # Gross import from region a - transmission assets are directional
         # I is import into the owner region
         # X is export from another owner region turned into import to this destination region
-        imp = sum(m.Ih[txh,w,h]*m.eff[e,txh] for txh in m.TXH if (e,r,txh) in m.TXH_er)\
-             +sum(m.Xh[tih,w,h]*m.eff[e,tih] for tih in m.TXH if (e,r,tih) in m.TIH_er)
+        imp = sum(m.Ih[axh,w,h]*m.eff[e,axh] for axh in m.AXH if (e,r,axh) in m.AXH_er)\
+             +sum(m.Xh[aih,w,h]*m.eff[e,aih] for aih in m.AXH if (e,r,aih) in m.AIH_er)
 
         # Gross export from region a - transmission assets are directional
         # so export for the owner is import to the receiver
-        exp = sum(m.Xh[txh,w,h] for txh in m.TXH if (e,r,txh) in m.TXH_er)\
-             +sum(m.Ih[tih,w,h] for tih in m.TXH if (e,r,tih) in m.TIH_er)
+        exp = sum(m.Xh[axh,w,h] for axh in m.AXH if (e,r,axh) in m.AXH_er)\
+             +sum(m.Ih[aih,w,h] for aih in m.AXH if (e,r,aih) in m.AIH_er)
 
         # Storage and discharge
-        sto = sum(m.Sh[tsh,w,h] for tsh in m.TSH if (e,r,tsh) in m.TSH_er)
-        dis = sum(m.Dh[tsh,w,h] for tsh in m.TSH if (e,r,tsh) in m.TSH_er)
+        sto = sum(m.Sh[ash,w,h] for ash in m.ASH if (e,r,ash) in m.ASH_er)
+        dis = sum(m.Dh[ash,w,h] for ash in m.ASH if (e,r,ash) in m.ASH_er)
 
         # Final consumption (gross)
         fin = m.fin_h[e,r,w,h]
@@ -233,37 +233,37 @@ class PyMorelModel():
     #
     ###################################################################################################################
 
-    def rule_transformation_capacity_limit_hourly(self,m,tth,w,h):
+    def rule_transformation_capacity_limit_hourly(self,m,ath,w,h):
         """Constraint for limiting input to hourly transformation assets."""
-        return m.Th[tth,w,h] < (m.ini_T[tth] + m.C[tth]) * m.ava_Th[tth,w,h]
+        return m.Th[ath,w,h] < (m.ini_T[ath] + m.C[ath]) * m.ava_Th[ath,w,h]
 
-    def rule_export_capacity_limit_hourly(self,m,txh,w,h):
+    def rule_export_capacity_limit_hourly(self,m,axh,w,h):
         """Constraint for limiting input to hourly transmission assets (export)."""
-        return m.Xh[txh,w,h] < (m.ini_X[txh] + m.C[txh]) * m.ava_Xh[txh,w,h]
+        return m.Xh[axh,w,h] < (m.ini_X[axh] + m.C[axh]) * m.ava_Xh[axh,w,h]
 
-    def rule_import_capacity_limit_hourly(self,m,tdh,w,h):
+    def rule_import_capacity_limit_hourly(self,m,aih,w,h):
         """Constraint for limiting input to hourly transmission assets (import)."""
-        return m.Ih[tdh,w,h] < (m.ini_I[tdh] + m.C[tdh]) * m.ava_Ih[tdh,w,h]
+        return m.Ih[aih,w,h] < (m.ini_I[aih] + m.C[aih]) * m.ava_Ih[aih,w,h]
 
-    def rule_storage_capacity_limit_hourly(self,m,tsh,w,h):
+    def rule_storage_capacity_limit_hourly(self,m,ash,w,h):
         """Constraint for limiting input to hourly storage sion assets."""
-        return m.Sh[tsh,w,h] < (m.ini_S[tsh] + m.C[tsh]) * m.ava_Sh[tsh,w,h]
+        return m.Sh[ash,w,h] < (m.ini_S[ash] + m.C[ash]) * m.ava_Sh[ash,w,h]
 
-    def rule_discharge_capacity_limit_hourly(self,m,tsh,w,h):
+    def rule_discharge_capacity_limit_hourly(self,m,ash,w,h):
         """Constraint for limiting output from hourly storage assets."""
-        return m.Dh[tsh,w,h] < (m.ini_D[tsh] + m.C[tsh]) * m.ava_Dh[tsh,w,h]
+        return m.Dh[ash,w,h] < (m.ini_D[ash] + m.C[ash]) * m.ava_Dh[ash,w,h]
 
-    def rule_storage_volume_maxlimit_hourly(self,m,tsh,w,h):
+    def rule_storage_volume_maxlimit_hourly(self,m,ash,w,h):
         """Constraint for limiting upper volume of hourly storage assets."""
-        return m.Vh[tsh,w,h] < (m.ini_V[tsh] + m.C[tsh]) * m.ava_Vh[tsh,w,h]
+        return m.Vh[ash,w,h] < (m.ini_V[ash] + m.C[ash]) * m.ava_Vh[ash,w,h]
 
-    def rule_storage_volume_minlimit_hourly(self,m,tsh,w,h):
+    def rule_storage_volume_minlimit_hourly(self,m,ash,w,h):
         """Constraint for limiting input to hourly storage assets."""
-        return m.Vh[tsh,w,h] > (m.ini_V[tsh] + m.C[tsh]) * m.ava_Vh[tsh,w,h]
+        return m.Vh[ash,w,h] > (m.ini_V[ash] + m.C[ash]) * m.ava_Vh[ash,w,h]
 
-    def rule_new_capacity(self,m,t):
+    def rule_new_capacity(self,m,a):
         """Limit new capacity below exogenous choice."""
-        return m.C[t] < m.max_C[t]
+        return m.C[a] < m.max_C[a]
 
     ###################################################################################################################
     #
@@ -277,8 +277,8 @@ class PyMorelModel():
         self.results = self.solver.solve(self.model)
 
     def report(self):
-        self.model.TTH.pprint()
-        self.model.TTH_er.pprint()
+        self.model.ATH.pprint()
+        self.model.ATH_er.pprint()
         self.model.Q_equilibrium_h.pprint()
         print(self.results)
 

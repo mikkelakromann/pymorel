@@ -36,9 +36,9 @@ class PyMorelOutput():
         # Unpack the index tuple of (tech, week, hour) to separate columns
         act_h['asst'], act_h['week'], act_h['hour'] = zip(*act_h.index)
         # Merge energy carrier and efficiency on technologies
-        act_h = act_h.merge(self.input.te[['asst','ener','effe']], on='asst')
+        act_h = act_h.merge(self.input.ae[['asst','ener','effe']], on='asst')
         # Merge region into act_h
-        act_h = act_h.merge(self.input.t[['asst','regn','dest']], on='asst')
+        act_h = act_h.merge(self.input.a[['asst','regn','dest']], on='asst')
         # Calculate effect
         act_h['efct'] = act_h['effe']*act_h['level']
         print(act_h)

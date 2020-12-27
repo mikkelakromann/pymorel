@@ -19,7 +19,7 @@ class InputDataDict():
             'vFin': ['varElec', 'varElec', 'varElec', 'varDHea', 'varDHea', 'varDHea', ],
         }
         # Asset database
-        self.data['t_data'] = {
+        self.data['a_data'] = {
             # Asset name (duplicates as Asset set)
             'asst': ['bpgt_dk0','bpgt_de0','bpgt_no0','wind_dk0','wind_de0','wind_no0','sopv_dk0','sopv_de0','sopv_no0',],
             # Role: tfrm: transformation, tmis: transmission, stor: storage
@@ -47,8 +47,8 @@ class InputDataDict():
             # Availability choice, % per hour/week/year
             'vAva': ['uniform' ,'uniform' ,'uniform' ,'wind_dk', 'wind_de', 'wind_no', 'dayonly', 'dayonly', 'dayonly', ],
         }
-        # Asset/energt carrier database
-        self.data['te_data'] = {
+        # Asset/energy carrier database
+        self.data['ae_data'] = {
             # Asset name
             'asst': ['bpgt_dk0','bpgt_de0','bpgt_no0','bpgt_dk0','bpgt_de0','bpgt_no0','bpgt_dk0','bpgt_de0','bpgt_no0',
                      'wind_dk0','wind_de0','wind_no0','sopv_dk0','sopv_de0','sopv_no0',],
@@ -100,7 +100,7 @@ class InputDataDict():
 
         }
         # Yearly Asset data - index: (tech,year)
-        self.data['ty_data'] = {
+        self.data['ay_data'] = {
             'asst':     ['bpgt_dk0','bpgt_de0','bpgt_no0','wind_dk0','wind_de0','wind_no0','sopv_dk0','sopv_de0','sopv_no0',],
             'year':     ['y2020',   'y2020',   'y2020',   'y2020',   'y2020',   'y2020',   'y2020',   'y2020',   'y2020',   ],
             'iniC':     [1000,      1000,      1000,      1000,      1000,      1000,      1000,      1000,      1000,      ],
