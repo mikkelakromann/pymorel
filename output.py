@@ -34,11 +34,11 @@ class PyMorelOutput():
         # Create hourly activity dataframe with all values from hourly variables
         act_h = pandas.concat([Th,Xh,Ih,Sh,Dh,Vh])
         # Unpack the index tuple of (tech, week, hour) to separate columns
-        act_h['tech'], act_h['week'], act_h['hour'] = zip(*act_h.index)
+        act_h['asst'], act_h['week'], act_h['hour'] = zip(*act_h.index)
         # Merge energy carrier and efficiency on technologies
-        act_h = act_h.merge(self.input.te[['tech','ener','effe']], on='tech')
+        act_h = act_h.merge(self.input.te[['asst','ener','effe']], on='asst')
         # Merge area into act_h
-        act_h = act_h.merge(self.input.t[['tech','area','dest']], on='tech')
+        act_h = act_h.merge(self.input.t[['asst','area','dest']], on='asst')
         # Calculate effect
         act_h['efct'] = act_h['effe']*act_h['level']
         print(act_h)

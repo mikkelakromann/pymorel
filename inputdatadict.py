@@ -18,10 +18,10 @@ class InputDataDict():
             'lFin': [40.00,     400.0,     40.00,     0.00,      0.0,       0.00,     ],
             'vFin': ['varElec', 'varElec', 'varElec', 'varDHea', 'varDHea', 'varDHea', ],
         }
-        # Technology database
+        # Asset database
         self.data['t_data'] = {
-            # Technology name (duplicates as technology set)
-            'tech': ['bpgt_dk0','bpgt_de0','bpgt_no0','wind_dk0','wind_de0','wind_no0','sopv_dk0','sopv_de0','sopv_no0',],
+            # Asset name (duplicates as Asset set)
+            'asst': ['bpgt_dk0','bpgt_de0','bpgt_no0','wind_dk0','wind_de0','wind_no0','sopv_dk0','sopv_de0','sopv_no0',],
             # Role: tfrm: transformation, tmis: transmission, stor: storage
             'role': ['tfrm',    'tfrm',    'tfrm',    'tfrm',    'tfrm',    'tfrm',    'tfrm',    'tfrm',    'tfrm',    ],
             # Area of location
@@ -47,10 +47,10 @@ class InputDataDict():
             # Availability choice, % per hour/week/year
             'vAva': ['uniform' ,'uniform' ,'uniform' ,'wind_dk', 'wind_de', 'wind_no', 'dayonly', 'dayonly', 'dayonly', ],
         }
-        # Technology/energt carrier database
+        # Asset/energt carrier database
         self.data['te_data'] = {
-            # Technology name
-            'tech': ['bpgt_dk0','bpgt_de0','bpgt_no0','bpgt_dk0','bpgt_de0','bpgt_no0','bpgt_dk0','bpgt_de0','bpgt_no0',
+            # Asset name
+            'asst': ['bpgt_dk0','bpgt_de0','bpgt_no0','bpgt_dk0','bpgt_de0','bpgt_no0','bpgt_dk0','bpgt_de0','bpgt_no0',
                      'wind_dk0','wind_de0','wind_no0','sopv_dk0','sopv_de0','sopv_no0',],
             # Energy carrier
             'ener': ['elec',    'elec',    'elec',    'dhea',    'dhea',    'dhea',    'ngas',    'ngas',    'ngas',
@@ -99,9 +99,9 @@ class InputDataDict():
                          0.500, 0.400, 0.400, 0.600,],
 
         }
-        # Yearly technology data - index: (tech,year)
+        # Yearly Asset data - index: (tech,year)
         self.data['ty_data'] = {
-            'tech':     ['bpgt_dk0','bpgt_de0','bpgt_no0','wind_dk0','wind_de0','wind_no0','sopv_dk0','sopv_de0','sopv_no0',],
+            'asst':     ['bpgt_dk0','bpgt_de0','bpgt_no0','wind_dk0','wind_de0','wind_no0','sopv_dk0','sopv_de0','sopv_no0',],
             'year':     ['y2020',   'y2020',   'y2020',   'y2020',   'y2020',   'y2020',   'y2020',   'y2020',   'y2020',   ],
             'iniC':     [1000,      1000,      1000,      1000,      1000,      1000,      1000,      1000,      1000,      ],
             'maxC':     [1000,      1000,      1000,      1000,      1000,      1000,      1000,      1000,      1000,      ],

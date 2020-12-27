@@ -60,7 +60,7 @@ class PyMorelModel():
         EW = m.EW = get_subset(subsets['EW'], E)        # Energy carriers traded (W)eekly
         EY = m.EY = get_subset(subsets['EY'], E)        # Energy carriers traded (Y)early
 
-        # Tech subsets are distinguished by second letter referring to technology role (T,S,X) or capacity (C)
+        # Tech subsets are distinguished by second letter referring to asset role (T,S,X) or capacity (C)
         # Note: TT, TX and TS are true, mutually exclusive subsets
         TT = m.TT = get_subset(subsets['TT'], T)        # Technologies for (T)ransformation
         TX = m.TX = get_subset(subsets['TX'], T)        # Technologies for e(X)change
@@ -77,29 +77,29 @@ class PyMorelModel():
         TSW = m.TSW = get_subset(subsets['TSW'],TS)     # Technologies for (S)torage (W)eekly
         TSY = m.TSY = get_subset(subsets['TSY'],TS)     # Technologies for (S)torage (Y)early
 
-        # tech/tfrq subsets conditional on ener/area - store cond. subsets in a dict
+        # asst/tfrq subsets conditional on ener/area - store cond. subsets in a dict
         EAT = subsets['EAT']
-        m.TTH_ea = get_subset(subsets['TTH_ea'],EAT)  # Transformation hourly technologies
-        m.TXH_ea = get_subset(subsets['TXH_ea'],EAT)  # Export hourly technologies
-        m.TIH_ea = get_subset(subsets['TIH_ea'],EAT)  # Import hourly technologies
-        m.TSH_ea = get_subset(subsets['TSH_ea'],EAT)  # Storage hourly technologies
-        m.TTW_ea = get_subset(subsets['TTW_ea'],EAT)  # Transformation weekly technologies
-        m.TXW_ea = get_subset(subsets['TXW_ea'],EAT)  # Export weekly technologies
-        m.TIW_ea = get_subset(subsets['TIW_ea'],EAT)  # Import weekly technologies
-        m.TSW_ea = get_subset(subsets['TSW_ea'],EAT)  # Storage weekly technologies
-        m.TTY_ea = get_subset(subsets['TTY_ea'],EAT)  # Transformation yearly technologies
-        m.TXY_ea = get_subset(subsets['TXY_ea'],EAT)  # Transmission yearly technologies
-        m.TIY_ea = get_subset(subsets['TIY_ea'],EAT)  # Transmission yearly technologies
-        m.TSY_ea = get_subset(subsets['TSY_ea'],EAT)  # Storage yearly technologies
+        m.TTH_ea = get_subset(subsets['TTH_ea'],EAT)  # Transformation hourly assets
+        m.TXH_ea = get_subset(subsets['TXH_ea'],EAT)  # Export hourly assets
+        m.TIH_ea = get_subset(subsets['TIH_ea'],EAT)  # Import hourly assets
+        m.TSH_ea = get_subset(subsets['TSH_ea'],EAT)  # Storage hourly assets
+        m.TTW_ea = get_subset(subsets['TTW_ea'],EAT)  # Transformation weekly assets
+        m.TXW_ea = get_subset(subsets['TXW_ea'],EAT)  # Export weekly assets
+        m.TIW_ea = get_subset(subsets['TIW_ea'],EAT)  # Import weekly assets
+        m.TSW_ea = get_subset(subsets['TSW_ea'],EAT)  # Storage weekly assets
+        m.TTY_ea = get_subset(subsets['TTY_ea'],EAT)  # Transformation yearly assets
+        m.TXY_ea = get_subset(subsets['TXY_ea'],EAT)  # Transmission yearly assets
+        m.TIY_ea = get_subset(subsets['TIY_ea'],EAT)  # Transmission yearly assets
+        m.TSY_ea = get_subset(subsets['TSY_ea'],EAT)  # Storage yearly assets
 
         ###############################################################################################################
         # Variable declaration and assignment
         ###############################################################################################################
 
         # Technology capacity additions are annual
-        m.C = Var(TC, within=NonNegativeReals)          # Capacity addition for all endognenous investment technologies
+        m.C = Var(TC, within=NonNegativeReals)          # Capacity addition for all endognenous investment assets
 
-        # Hourly transformation, storage and transmission technologies
+        # Hourly transformation, storage and transmission assets
         m.Th = Var(TTH,W,H, within=NonNegativeReals)    # Energy input effect into transformation
         m.Xh = Var(TXH,W,H, within=NonNegativeReals)    # Transmission effect from 1st to 2nd area
         m.Ih = Var(TXH,W,H, within=NonNegativeReals)    # Transmission effect from 2nd to 1st area
@@ -107,7 +107,7 @@ class PyMorelModel():
         m.Dh = Var(TSH,W,H, within=NonNegativeReals)    # Discharge output effect from storage
         m.Vh = Var(TSH,W,H, within=NonNegativeReals)    # Stored volume of energy
 
-        # Weekly transformation, storage and transmission technologies
+        # Weekly transformation, storage and transmission assets
         #m.TIw = Var(ttw,w, within=NonNegativeReals)    # Energy input effect into transformation
         #m.SSw = Var(tsw,w, within=NonNegativeReals)    # Storage input effect into storage
         #m.SDw = Var(tsw,w, within=NonNegativeReals)    # Discharge output effect from storage
@@ -138,16 +138,16 @@ class PyMorelModel():
 
         # Parameters that are fixed across the year, to be multiplied or constraining any variable
         m.eff = Param(E,T, initialize=para_y['eff'], default=0)             # Conversion efficiency ratio output/input
-        m.ini_T = Param(TT, initialize=para_y['ini_T'], default=0)          # Initial capacity of transformation tech.
+        m.ini_T = Param(TT, initialize=para_y['ini_T'], default=0)          # Initial capacity of transformation asst.
         print(para_y['ini_X'])
 
-        m.ini_X = self.get_para([TX], para_y['ini_X'])                      # Initial capacity of export technology
-        m.ini_I = Param(TX, initialize=para_y['ini_I'], default=0)          # Initial capacity of import technology
-        m.ini_S = Param(TS, initialize=para_y['ini_S'], default=0)          # Initial capacity of storage technology
-        m.ini_D = Param(TS, initialize=para_y['ini_D'], default=0)          # Initial capacity of discharge technology
-        m.ini_V = Param(TS, initialize=para_y['ini_V'], default=0)          # Initial capacity of volume technology
-        m.max_C = Param(T, initialize=para_y['max_C'], default=0)           # Maximum capacity of any technology
-        m.cst_C = Param(T, initialize=para_y['cst_C'], default=0)           # Unit capital cost of technology
+        m.ini_X = self.get_para([TX], para_y['ini_X'])                      # Initial capacity of export asset
+        m.ini_I = Param(TX, initialize=para_y['ini_I'], default=0)          # Initial capacity of import asset
+        m.ini_S = Param(TS, initialize=para_y['ini_S'], default=0)          # Initial capacity of storage asset
+        m.ini_D = Param(TS, initialize=para_y['ini_D'], default=0)          # Initial capacity of discharge asset
+        m.ini_V = Param(TS, initialize=para_y['ini_V'], default=0)          # Initial capacity of volume asset
+        m.max_C = Param(T, initialize=para_y['max_C'], default=0)           # Maximum capacity of any asset
+        m.cst_C = Param(T, initialize=para_y['cst_C'], default=0)           # Unit capital cost of asset
 
         ###############################################################################################################
         # Objective and constraints declaration and assignment
@@ -194,17 +194,17 @@ class PyMorelModel():
 
         # Transformation between energy carriers: eff>0 is output, eff<0 is input
         # For heat pumps, eff needs to be modified to depend on hour and week
-        # TTH_ea is a list of (ener,area,tech) hour transformation technologies
-        # (e,a) is under control already, so summing will yield the techs
+        # TTH_ea is a list of (ener,area,asst) hour transformation assets
+        # (e,a) is under control already, so summing will yield the assts
         tra = sum(m.Th[tth,w,h]*m.eff[e,tth] for tth in m.TTH if (e,a,tth) in m.TTH_ea)
 
-        # Gross import from area a - transmission technologies are directional
+        # Gross import from area a - transmission assets are directional
         # I is import into the owner area
         # X is export from another owner area turned into import to this destination area
         imp = sum(m.Ih[txh,w,h]*m.eff[e,txh] for txh in m.TXH if (e,a,txh) in m.TXH_ea)\
              +sum(m.Xh[tih,w,h]*m.eff[e,tih] for tih in m.TXH if (e,a,tih) in m.TIH_ea)
 
-        # Gross export from area a - transmission technologies are directional
+        # Gross export from area a - transmission assets are directional
         # so export for the owner is import to the receiver
         exp = sum(m.Xh[txh,w,h] for txh in m.TXH if (e,a,txh) in m.TXH_ea)\
              +sum(m.Ih[tih,w,h] for tih in m.TXH if (e,a,tih) in m.TIH_ea)
@@ -222,8 +222,8 @@ class PyMorelModel():
     ###################################################################################################################
     #
     #   STORAGE RELATIONS: INTERTEMPORAL AND OTHERS RULE DEFINITIONS
-    #   Storage is on a technology basis, i.e. one equation per technology and trading frequency step
-    #   Note: each technology is always connected to exactly one area
+    #   Storage is on a asset basis, i.e. one equation per asset and trading frequency step
+    #   Note: each asset is always connected to exactly one area
     #
     ###################################################################################################################
 
@@ -234,31 +234,31 @@ class PyMorelModel():
     ###################################################################################################################
 
     def rule_transformation_capacity_limit_hourly(self,m,tth,w,h):
-        """Constraint for limiting input to hourly transformation technologies."""
+        """Constraint for limiting input to hourly transformation assets."""
         return m.Th[tth,w,h] < (m.ini_T[tth] + m.C[tth]) * m.ava_Th[tth,w,h]
 
     def rule_export_capacity_limit_hourly(self,m,txh,w,h):
-        """Constraint for limiting input to hourly transmission technologies (export)."""
+        """Constraint for limiting input to hourly transmission assets (export)."""
         return m.Xh[txh,w,h] < (m.ini_X[txh] + m.C[txh]) * m.ava_Xh[txh,w,h]
 
     def rule_import_capacity_limit_hourly(self,m,tdh,w,h):
-        """Constraint for limiting input to hourly transmission technologies (import)."""
+        """Constraint for limiting input to hourly transmission assets (import)."""
         return m.Ih[tdh,w,h] < (m.ini_I[tdh] + m.C[tdh]) * m.ava_Ih[tdh,w,h]
 
     def rule_storage_capacity_limit_hourly(self,m,tsh,w,h):
-        """Constraint for limiting input to hourly storage sion technologies."""
+        """Constraint for limiting input to hourly storage sion assets."""
         return m.Sh[tsh,w,h] < (m.ini_S[tsh] + m.C[tsh]) * m.ava_Sh[tsh,w,h]
 
     def rule_discharge_capacity_limit_hourly(self,m,tsh,w,h):
-        """Constraint for limiting output from hourly storage technologies."""
+        """Constraint for limiting output from hourly storage assets."""
         return m.Dh[tsh,w,h] < (m.ini_D[tsh] + m.C[tsh]) * m.ava_Dh[tsh,w,h]
 
     def rule_storage_volume_maxlimit_hourly(self,m,tsh,w,h):
-        """Constraint for limiting upper volume of hourly storage technologies."""
+        """Constraint for limiting upper volume of hourly storage assets."""
         return m.Vh[tsh,w,h] < (m.ini_V[tsh] + m.C[tsh]) * m.ava_Vh[tsh,w,h]
 
     def rule_storage_volume_minlimit_hourly(self,m,tsh,w,h):
-        """Constraint for limiting input to hourly storage technologies."""
+        """Constraint for limiting input to hourly storage assets."""
         return m.Vh[tsh,w,h] > (m.ini_V[tsh] + m.C[tsh]) * m.ava_Vh[tsh,w,h]
 
     def rule_new_capacity(self,m,t):
