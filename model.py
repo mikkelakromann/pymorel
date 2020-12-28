@@ -61,12 +61,16 @@ class PyMorelModel():
         EY = m.EY = get_subset(subsets['EY'], E)        # Energy carriers traded (Y)early
 
         # Tech subsets are distinguished by second letter referring to asset role (T,S,X) or capacity (C)
-        # Note: TT, TX and TS are true, mutually exclusive subsets
+        # Note: AP, AT, AX and AS are true, mutually exclusive subsets of assets with differnt roles
+        AP = m.AP = get_subset(subsets['AP'], A)        # Assets for (P)rimary production
         AT = m.AT = get_subset(subsets['AT'], A)        # Assets for (T)ransformation
         AX = m.AX = get_subset(subsets['AX'], A)        # Assets for e(X)change
         AS = m.AS = get_subset(subsets['AS'], A)        # Assets for (S)torage
         AC = m.AC = get_subset(subsets['AC'], A)        # Assets with (C)apacity investment
 
+        APH = m.APH = get_subset(subsets['APH'],AP)     # Assets for (P)rimary production (H)ourly
+        APW = m.APW = get_subset(subsets['APW'],AP)     # Assets for (P)rimary production (W)weekly
+        APY = m.APY = get_subset(subsets['APY'],AP)     # Assets for (P)rimary production (Y)early
         ATH = m.ATH = get_subset(subsets['ATH'],AT)     # Assets for (T)ransformation (H)ourly
         ATW = m.ATW = get_subset(subsets['ATW'],AT)     # Assets for (T)ransformation (W)eekly
         ATY = m.ATY = get_subset(subsets['ATY'],AT)     # Assets for (T)ransformation (Y)early
@@ -79,17 +83,20 @@ class PyMorelModel():
 
         # asst/tfrq subsets conditional on ener/region - store cond. subsets in a dict
         ERA = subsets['ERA']
+        m.APH_er = get_subset(subsets['APH_er'],ERA)  # Primary production hourly assets
+        m.APW_er = get_subset(subsets['APW_er'],ERA)  # Primary production weekly assets
+        m.APY_er = get_subset(subsets['APY_er'],ERA)  # Primary production yearly assets
         m.ATH_er = get_subset(subsets['ATH_er'],ERA)  # Transformation hourly assets
-        m.AXH_er = get_subset(subsets['AXH_er'],ERA)  # Export hourly assets
-        m.AIH_er = get_subset(subsets['AIH_er'],ERA)  # Import hourly assets
-        m.ASH_er = get_subset(subsets['ASH_er'],ERA)  # Storage hourly assets
         m.ATW_er = get_subset(subsets['ATW_er'],ERA)  # Transformation weekly assets
-        m.AXW_er = get_subset(subsets['AXW_er'],ERA)  # Export weekly assets
-        m.AIW_er = get_subset(subsets['AIW_er'],ERA)  # Import weekly assets
-        m.ASW_er = get_subset(subsets['ASW_er'],ERA)  # Storage weekly assets
         m.ATY_er = get_subset(subsets['ATY_er'],ERA)  # Transformation yearly assets
+        m.AXH_er = get_subset(subsets['AXH_er'],ERA)  # Export hourly assets
+        m.AXW_er = get_subset(subsets['AXW_er'],ERA)  # Export weekly assets
         m.AXY_er = get_subset(subsets['AXY_er'],ERA)  # Transmission yearly assets
+        m.AIH_er = get_subset(subsets['AIH_er'],ERA)  # Import hourly assets
+        m.AIW_er = get_subset(subsets['AIW_er'],ERA)  # Import weekly assets
         m.AIY_er = get_subset(subsets['AIY_er'],ERA)  # Transmission yearly assets
+        m.ASH_er = get_subset(subsets['ASH_er'],ERA)  # Storage hourly assets
+        m.ASW_er = get_subset(subsets['ASW_er'],ERA)  # Storage weekly assets
         m.ASY_er = get_subset(subsets['ASY_er'],ERA)  # Storage yearly assets
 
         ###############################################################################################################
@@ -100,6 +107,7 @@ class PyMorelModel():
         m.C = Var(AC, within=NonNegativeReals)          # Capacity addition for all endognenous investment assets
 
         # Hourly transformation, storage and transmission assets
+        m.Ph = Var(APH,W,H, within=NonNegativeReals)    # Energy input effect into transformation
         m.Th = Var(ATH,W,H, within=NonNegativeReals)    # Energy input effect into transformation
         m.Xh = Var(AXH,W,H, within=NonNegativeReals)    # Transmission effect from 1st to 2nd region
         m.Ih = Var(AXH,W,H, within=NonNegativeReals)    # Transmission effect from 2nd to 1st region
@@ -123,10 +131,10 @@ class PyMorelModel():
         para_y = self.data.para_y   # Pointer for yearly parameter data structure (dict of dicts)
 
         # Parameters potentially varying hourly to be multiplied to or constraining hourly variables
+        m.cst_Ph = Param(APH,W,H, initialize=para_h['cst_Ph'], default=0)   # Unit variable cost of primary production
         m.cst_Th = Param(ATH,W,H, initialize=para_h['cst_Th'], default=0)   # Unit variable cost of transformation
         m.cst_Sh = Param(ASH,W,H, initialize=para_h['cst_Sh'], default=0)   # Unit variable cost of storage
         m.cst_Xh = Param(AXH,W,H, initialize=para_h['cst_Xh'], default=0)   # Unit variable cost of transmission
-
         m.ava_Th = Param(ATH,W,H, initialize=para_h['ava_Th'], default=0)   # Hourly availability of transformation
         m.ava_Xh = Param(AXH,W,H, initialize=para_h['ava_Xh'], default=0)   # Hourly availability of export
         m.ava_Ih = Param(AXH,W,H, initialize=para_h['ava_Ih'], default=0)   # Hourly availability of import
@@ -174,10 +182,11 @@ class PyMorelModel():
         cst_vopex = 0
         # Fuel costs are tied to input to generation, only exogenous fuel costs
         # TODO: Multiply with weights for weeks x hours
-        cst_fuels_h = sum(m.Th[ath,w,h]*m.cst_Th[ath,w,h] for ath in m.ATH for w in m.W for h in m.H)
-        cst_store_h = sum(m.Sh[ash,w,h]*m.cst_Sh[ash,w,h] for ash in m.ASH for w in m.W for h in m.H)
+        cst_prim_h = sum(m.Ph[aph,w,h]*m.cst_Ph[aph,w,h] for aph in m.APH for w in m.W for h in m.H)
+        cst_tfrm_h = sum(m.Th[ath,w,h]*m.cst_Th[ath,w,h] for ath in m.ATH for w in m.W for h in m.H)
+        cst_stor_h = sum(m.Sh[ash,w,h]*m.cst_Sh[ash,w,h] for ash in m.ASH for w in m.W for h in m.H)
         # Total costs is sum of CAPEX, Fixed OPEX, variable OPEX and fuel costs
-        cst_total = cst_capex + cst_fopex + cst_vopex + cst_fuels_h + cst_store_h
+        cst_total = cst_capex + cst_fopex + cst_vopex + cst_prim_h + cst_tfrm_h + cst_stor_h
         return cst_total
 
     ###################################################################################################################
@@ -191,6 +200,9 @@ class PyMorelModel():
     # Trading and exchange is on an energy carrier basis
     def rule_equilibrium_h(self,m,e,r,w,h) -> dict:
         """Constraint to ensure equilibrium for hourly traded energy carriers."""
+
+        # Primary energy production
+        pri = sum(m.Ph[aph,w,h]*m.eff[e,aph] for aph in m.APH if (e,r,aph) in m.APH_er)
 
         # Transformation between energy carriers: eff>0 is output, eff<0 is input
         # For heat pumps, eff needs to be modified to depend on hour and week
@@ -217,7 +229,7 @@ class PyMorelModel():
         fin = m.fin_h[e,r,w,h]
 
         # Return equilibrium constraint rule
-        return tra + dis + imp == fin + sto + exp
+        return pri + tra + dis + imp == fin + sto + exp
 
     ###################################################################################################################
     #

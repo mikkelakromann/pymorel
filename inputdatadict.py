@@ -12,10 +12,11 @@ class InputDataDict():
             'ener': ['elec',    'dhea',     'ngas'      ],
             'tfrq': ['hourly',  'hourly',   'yearly'    ],
         }
+        # Energy carrie / region database
         self.data['er_data'] = {
             'ener': ['elec',    'elec',    'elec',    'dhea',    'dhea',    'dhea',    ],
             'regn': ['dk0',     'de0',     'no0',     'dk0',     'de0',     'no0',     ],
-            'lFin': [40.00,     400.0,     40.00,     0.00,      0.0,       0.00,     ],
+            'lFin': [40.00,     400.0,     40.00,     0.00,      0.0,       0.00,      ],
             'vFin': ['varElec', 'varElec', 'varElec', 'varDHea', 'varDHea', 'varDHea', ],
         }
         # Asset database
