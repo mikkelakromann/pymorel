@@ -24,7 +24,7 @@ class InputDataDict():
             # Asset name (duplicates as Asset set)
             'asst': ['bpgt_dk0','bpgt_de0','bpgt_no0','wind_dk0','wind_de0','wind_no0','sopv_dk0','sopv_de0','sopv_no0',],
             # Role: tfrm: transformation, tmis: transmission, stor: storage
-            'role': ['tfrm',    'tfrm',    'tfrm',    'tfrm',    'tfrm',    'tfrm',    'tfrm',    'tfrm',    'tfrm',    ],
+            'role': ['tfrm',    'tfrm',    'tfrm',    'prim',    'prim',    'prim',    'prim',    'prim',    'prim',    ],
             # Region of location
             'regn': ['dk0',     'de0',     'no0',     'dk0',     'de0',     'no0',     'dk0',     'de0',     'no0',     ],
             # Destination of transmission if applicable
