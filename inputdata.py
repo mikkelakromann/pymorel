@@ -173,7 +173,7 @@ class PyMorelInputData():
         """Make dict for all yearly model parameters."""
         # Declare assets' yearly parameters with dict keys of (t) and (e,t)
 
-        # Energy efficiency by energy carrier and asset (ener,tech): effe
+        # Energy efficiency by energy carrier and asset (ener,tech): effi
         ae = self.ae.copy()
         ae['key'] = ae[['ener','asst']].apply(tuple,axis=1)
 
@@ -188,7 +188,7 @@ class PyMorelInputData():
         ay_s = ay[ay.role == 'stor']
 
         self.para_y = {
-            'eff': dict(zip(ae.key,ae.effe)),           # Conversion efficiency by
+            'effi': dict(zip(ae.key,ae.effi)),          # Conversion efficiency by
             'ini_P': dict(zip(ay_p.key,ay_p.iniC)),     # Initial capacity of prim. prod. by asset and year
             'ini_T': dict(zip(ay_t.key,ay_t.iniC)),     # Initial capacity of transformation by asset and year
             'ini_X': dict(zip(ay_x.key,ay_x.iniC)),     # Initial capacity of transmission export by asset and year

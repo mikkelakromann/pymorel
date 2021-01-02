@@ -58,7 +58,7 @@ class InputDataDict():
                      'elec',    'elec',    'elec',    'elec',    'elec',    'elec',],
             # Efficiency by energy carrier, share of total energy input
             # Negative means energy input, positive means energy output
-            'effe': [0.45,      0.45,      0.45,      0.55,      0.55,      0.55,      -1.00,     -1.00,     -1.00,
+            'effi': [0.45,      0.45,      0.45,      0.55,      0.55,      0.55,      -1.00,     -1.00,     -1.00,
                      1.00,      1.00,      1.00,      1.00,      1.00,      1.00,      ],
         }
         # 6 hour intervals across 1 week = 4x7 = 28 hours/week

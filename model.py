@@ -145,7 +145,7 @@ class PyMorelModel():
         m.fin_h = Param(E,R,W,H, initialize=para_h['fin_h'], default=0)     # Hourly demand for energy carrier by region
 
         # Parameters that are fixed across the year, to be multiplied or constraining any variable
-        m.eff = Param(E,A, initialize=para_y['eff'], default=0)             # Conversion efficiency ratio output/input
+        m.effi = Param(E,A, initialize=para_y['effi'], default=0)             # Conversion efficiency ratio output/input
         m.ini_T = Param(AT, initialize=para_y['ini_T'], default=0)          # Initial capacity of transformation asst.
         print(para_y['ini_X'])
 
@@ -202,19 +202,19 @@ class PyMorelModel():
         """Constraint to ensure equilibrium for hourly traded energy carriers."""
 
         # Primary energy production
-        pri = sum(m.Ph[aph,w,h]*m.eff[e,aph] for aph in m.APH if (e,r,aph) in m.APH_er)
+        pri = sum(m.Ph[aph,w,h]*m.effi[e,aph] for aph in m.APH if (e,r,aph) in m.APH_er)
 
         # Transformation between energy carriers: eff>0 is output, eff<0 is input
         # For heat pumps, eff needs to be modified to depend on hour and week
         # TTH_ea is a list of (ener,region,asst) hour transformation assets
         # (e,r) is under control already, so summing will yield the assts
-        tra = sum(m.Th[ath,w,h]*m.eff[e,ath] for ath in m.ATH if (e,r,ath) in m.ATH_er)
+        tra = sum(m.Th[ath,w,h]*m.effi[e,ath] for ath in m.ATH if (e,r,ath) in m.ATH_er)
 
         # Gross import from region a - transmission assets are directional
         # I is import into the owner region
         # X is export from another owner region turned into import to this destination region
-        imp = sum(m.Ih[axh,w,h]*m.eff[e,axh] for axh in m.AXH if (e,r,axh) in m.AXH_er)\
-             +sum(m.Xh[aih,w,h]*m.eff[e,aih] for aih in m.AXH if (e,r,aih) in m.AIH_er)
+        imp = sum(m.Ih[axh,w,h]*m.effi[e,axh] for axh in m.AXH if (e,r,axh) in m.AXH_er)\
+             +sum(m.Xh[aih,w,h]*m.effi[e,aih] for aih in m.AXH if (e,r,aih) in m.AIH_er)
 
         # Gross export from region a - transmission assets are directional
         # so export for the owner is import to the receiver
