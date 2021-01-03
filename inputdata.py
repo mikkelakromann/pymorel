@@ -48,7 +48,7 @@ class PyMorelInputData():
         # { 'E': ['elec','dhea', 'ngas'], 'A': ['dk0','no0','de0'], }
         self.sets = {
             'E':  self.e['ener'].to_list(),                          # Energy carriers
-            'R':  self.r['regn'].to_list(),                          # Regions
+            'R':  self.r['rgio'].to_list(),                          # Regions
             'A':  self.a['asst'].to_list(),                          # All active assets
             'W':  self.w['week'].to_list(),                          # Weeks
             'H':  self.h['hour'].to_list(),                          # Hours
@@ -58,7 +58,7 @@ class PyMorelInputData():
         aee = pandas.merge(self.ae,self.e[['ener','tfrq']], on='ener')
         aee = pandas.merge(aee,self.a, on='asst')
         # Create ener,region,tech tuple-keys e.g. ('elec','dk0','ccgt') in the dataframe for later use
-        aee['key_era'] = aee[['ener','regn','asst']].apply(tuple,axis=1)
+        aee['key_era'] = aee[['ener','rgio','asst']].apply(tuple,axis=1)
 
         # Copy all transmission assets in order to put the import flows
         # into the TI*_ea subsets.
@@ -149,9 +149,9 @@ class PyMorelInputData():
 
         # Final consumption - mFin is the multiplier from the selected column lFin
         wh.columns = ['week','hour','vFin','mFin']
-        fwh = pandas.merge(self.er[['ener','regn','vFin','lFin']], wh, on='vFin')
+        fwh = pandas.merge(self.er[['ener','rgio','vFin','lFin']], wh, on='vFin')
         fwh['fin'] = fwh.lFin*fwh.mFin
-        fwh['key'] = fwh[['ener','regn','week','hour']].apply(tuple,axis=1)
+        fwh['key'] = fwh[['ener','rgio','week','hour']].apply(tuple,axis=1)
 
         # Declare hourly parameters with dict keys (tth,w,h)
         self.para_h = {

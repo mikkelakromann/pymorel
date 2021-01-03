@@ -5,7 +5,7 @@ class InputDataDict():
         self.data = {}
         # Region database
         self.data['r_data'] = {
-            'regn': ['dk0',     'de0',      'no0',      ],
+            'rgio': ['dk0',     'de0',      'no0',      ],
         }
         # Energy carrier database
         self.data['e_data'] = {
@@ -15,7 +15,7 @@ class InputDataDict():
         # Energy carrie / region database
         self.data['er_data'] = {
             'ener': ['elec',    'elec',    'elec',    'dhea',    'dhea',    'dhea',    ],
-            'regn': ['dk0',     'de0',     'no0',     'dk0',     'de0',     'no0',     ],
+            'rgio': ['dk0',     'de0',     'no0',     'dk0',     'de0',     'no0',     ],
             'lFin': [40.00,     400.0,     40.00,     0.00,      0.0,       0.00,      ],
             'vFin': ['varElec', 'varElec', 'varElec', 'varDHea', 'varDHea', 'varDHea', ],
         }
@@ -26,7 +26,7 @@ class InputDataDict():
             # Role: tfrm: transformation, tmis: transmission, stor: storage
             'role': ['tfrm',    'tfrm',    'tfrm',    'prim',    'prim',    'prim',    'prim',    'prim',    'prim',    ],
             # Region of location
-            'regn': ['dk0',     'de0',     'no0',     'dk0',     'de0',     'no0',     'dk0',     'de0',     'no0',     ],
+            'rgio': ['dk0',     'de0',     'no0',     'dk0',     'de0',     'no0',     'dk0',     'de0',     'no0',     ],
             # Destination of transmission if applicable
             'dest': ['',        '',        '',        '',        '',        '',        '',        '',        '',        ],
             # Capital expenditure, money/MW
