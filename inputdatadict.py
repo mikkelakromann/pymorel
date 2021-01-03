@@ -9,8 +9,8 @@ class InputDataDict():
         }
         # Energy carrier database
         self.data['e_data'] = {
-            'ener': ['elec',    'dhea',     'ngas'      ],
-            'tfrq': ['hourly',  'hourly',   'yearly'    ],
+            'ener': ['elec',  'dhea',   'ngas'      ],
+            'tfrq': ['hour',  'hour',   'year'    ],
         }
         # Energy carrie / region database
         self.data['er_data'] = {
