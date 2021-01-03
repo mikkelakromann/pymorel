@@ -29,22 +29,16 @@ class InputDataDict():
             'regn': ['dk0',     'de0',     'no0',     'dk0',     'de0',     'no0',     'dk0',     'de0',     'no0',     ],
             # Destination of transmission if applicable
             'dest': ['',        '',        '',        '',        '',        '',        '',        '',        '',        ],
-            # Availability
-            'avai': ['uniform', 'uniform', 'uniform', 'wnd_dk',  'wnd_dk',  'wnd_dk',  'dayonly', 'dayonly', 'dayonly', ],
             # Capital expenditure, money/MW
             'cstC': [1.00,      1.00,      1.00,      2.00,      2.00,      2.00,      1.00,      1.00,      1.00,      ],
             # Fixed operational expenditure, money/MW/year
             'cstF': [50000,     50000,     50000,     50000,     50000,     50000,     25000,     25000,     25000,     ],
             # Variable operational costs, money/MWh
             'cstV': [1,         1,         1,         1,         1,         1,         0,         0,         0,         ],
-            # Already installed capacity in modelling year, MW
-            'inic': [5000,      80000,     5000,      4000,      5000,      1000,      1000,      20000,     0          ],
             # Ratio between capacity of S and V for storaage
             'ratSV':[0,         0,         0,         0,         0,         0,         0,         0,         0,         ],
             # Ratio between capacity of D and V for storaage
             'ratDV':[0,         0,         0,         0,         0,         0,         0,         0,         0,         ],
-            # Maximum potential investment, MW
-            'pcap': ['Inf',     'Inf',     'Inf',     'Inf',     'Inf',     'Inf',     'Inf',     'Inf',     'Inf',     ],
             # Availability choice, % per hour/week/year
             'vAva': ['uniform' ,'uniform' ,'uniform' ,'wind_dk', 'wind_de', 'wind_no', 'dayonly', 'dayonly', 'dayonly', ],
         }
