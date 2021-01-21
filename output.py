@@ -57,15 +57,14 @@ class PyMorelOutput():
 
         # Calculate effect and energy for each variable
         activity_h['efct'] = activity_h['effi']*activity_h['level']
-        weight = 1 + 0*365.25*24/(len(self.model.H)*len(self.model.H))
-        scale_engy = 1000
+        weight = 365.25*24/(len(self.model.H)*len(self.model.W))
+        scale_engy = 1  # Scale from input effect unit (eg. MW) to output energy unit (e.g. GWh)
         activity_h['engy'] = activity_h['efct'] * weight / scale_engy
         self.activity_h = activity_h
 
     def set_balances(self):
         """Calculate energy balance tables from activity tables"""
 
-        balance_h = self.activity_h[['rgio','role','ener','engy']].groupby(['rgio','role','ener']).sum()
-        balance_h_ener = pandas.pivot_table(self.activity_h, values='engy', index=['rgio','role'], columns=['ener'])
-        print(balance_h)
-        print(balance_h_ener)
+        self.balance_h = self.activity_h[['rgio','role','ener','engy']].groupby(['rgio','role','ener']).sum()
+        self.balance_h_ener = pandas.pivot_table(self.activity_h, values='engy', index=['rgio','role'], columns=['ener'])
+

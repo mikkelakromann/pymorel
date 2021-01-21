@@ -147,7 +147,6 @@ class PyMorelModel():
         # Parameters that are fixed across the year, to be multiplied or constraining any variable
         m.effi = Param(E,A, initialize=para_y['effi'], default=0)             # Conversion efficiency ratio output/input
         m.ini_T = Param(AT, initialize=para_y['ini_T'], default=0)          # Initial capacity of transformation asst.
-        print(para_y['ini_X'])
 
         m.ini_X = self.get_para([AX], para_y['ini_X'])                      # Initial capacity of export asset
         m.ini_I = Param(AX, initialize=para_y['ini_I'], default=0)          # Initial capacity of import asset
@@ -206,9 +205,13 @@ class PyMorelModel():
 
         # Transformation between energy carriers: eff>0 is output, eff<0 is input
         # For heat pumps, eff needs to be modified to depend on hour and week
-        # TTH_ea is a list of (ener,region,asst) hour transformation assets
+        # ATH_er is a list of hourly transformation assets conditional on (ener, rgio)
         # (e,r) is under control already, so summing will yield the assts
         tra = sum(m.Th[ath,w,h]*m.effi[e,ath] for ath in m.ATH if (e,r,ath) in m.ATH_er)
+        # Tw is effect for weekly technologies and is considered constant for every hour in that week
+        #    +sum(m.Tw[atw,w]*m.effi[e,atw] for atw in m.ATW if (e,r,atw) in m.ATW_er)
+        # Ty is effect for yearly technologies and is considered constant for every hour and week in that year
+        #    +sum(m.Ty[aty]*m.effi[e,aty] for aty in m.ATY if (e,r,aty) in m.ATY_er)
 
         # Gross import from region a - transmission assets are directional
         # I is import into the owner region
@@ -300,9 +303,6 @@ class PyMorelModel():
 
     def get_para(self, sets: list, data: dict) -> object:
         """Return Pyomo parameter, provide debugging information if fail."""
-        print("Mjello!")
-        print(sets)
-        print(data)
         try:
             p = Param(*sets, initialize=data, default=0)
         except KeyError as error:
