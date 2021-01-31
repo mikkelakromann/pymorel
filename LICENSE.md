@@ -1,0 +1,1 @@
+All files in this project are copyright (c) 2020-21 Mikkel A. Kromann (mikkel@aabenhuskromann.dk)
